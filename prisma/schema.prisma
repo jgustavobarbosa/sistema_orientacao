@@ -1,0 +1,321 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum PapelUsuario {
+  ORIENTADOR
+  ORIENTANDO
+}
+
+enum NivelProjeto {
+  IC
+  TCC
+  MESTRADO
+  DOUTORADO
+  POS_DOC
+}
+
+enum StatusProjeto {
+  PROPOSTA
+  EM_ANDAMENTO
+  QUALIFICADO
+  DEFENDIDO
+  TRANCADO
+}
+
+enum TipoMarco {
+  CAPITULO
+  APRESENTACAO
+  REVISAO
+  CHECKLIST
+  QUALIFICACAO
+  DEFESA
+  SUBMISSAO
+  OUTRO
+}
+
+enum StatusMarco {
+  A_FAZER
+  EM_REVISAO
+  CONCLUIDO
+  ATRASADO
+}
+
+enum StatusReuniao {
+  AGENDADA
+  REALIZADA
+  CANCELADA
+}
+
+enum CategoriaDocumento {
+  MANUSCRITO
+  CAPITULO
+  PLANO_ORIENTACAO
+  PLANO_PESQUISA
+  DATASET
+  PARECER_ETICA
+  SLIDES
+  OUTRO
+}
+
+model Usuario {
+  id         String       @id @default(uuid()) @db.Uuid
+  nome       String
+  email      String       @unique
+  papel      PapelUsuario @default(ORIENTANDO)
+  googleId   String?
+  ativo      Boolean      @default(false)
+  avatarUrl  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  projetosOrientador ProjetoOrientacao[] @relation("ProjetosComoOrientador")
+  projetosOrientando ProjetoOrientacao[] @relation("ProjetosComoOrientando")
+  marcos             MarcoAcademico[]
+  tarefasReuniao     TarefaReuniao[]
+  documentosEnviados Documento[]
+  logsAuditoria      AuditoriaLog[]
+  disponibilidades   DisponibilidadeOrientador[]
+  notificacoes       Notificacao[]
+  agendaAutomatica   ConfigAgendaAutomatica[]
+}
+
+model ProjetoOrientacao {
+  id               String        @id @default(uuid()) @db.Uuid
+  orientadorId     String        @db.Uuid
+  orientador       Usuario       @relation("ProjetosComoOrientador", fields: [orientadorId], references: [id])
+  orientandoId     String        @db.Uuid
+  orientando       Usuario       @relation("ProjetosComoOrientando", fields: [orientandoId], references: [id])
+  titulo           String
+  perguntaPesquisa String?       @db.Text
+  nivel            NivelProjeto
+  programa         String?
+  dataInicio       DateTime      @default(now())
+  prazoDefesa      DateTime?
+  status           StatusProjeto @default(EM_ANDAMENTO)
+  driveFolderId    String?
+  linkMeetFixo     String        @default("https://meet.google.com/fxv-mbbh-rqj")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  marcos            MarcoAcademico[]
+  reunioes          Reuniao[]
+  documentos        Documento[]
+  secoesTexto       SecaoTexto[]
+  leiturasIndicadas BibliotecaLeitura[]
+
+  @@index([orientadorId])
+  @@index([orientandoId])
+}
+
+model MarcoAcademico {
+  id            String            @id @default(uuid()) @db.Uuid
+  projetoId     String            @db.Uuid
+  projeto       ProjetoOrientacao @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  titulo        String
+  tipo          TipoMarco         @default(OUTRO)
+  descricao     String?           @db.Text
+  dataPrevista  DateTime
+  dataConclusao DateTime?
+  status        StatusMarco       @default(A_FAZER)
+  responsavelId String            @db.Uuid
+  responsavel   Usuario           @relation(fields: [responsavelId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([projetoId])
+}
+
+model Reuniao {
+  id                        String            @id @default(uuid()) @db.Uuid
+  projetoId                 String            @db.Uuid
+  projeto                   ProjetoOrientacao @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  numeroEncontro            Int
+  dataHoraInicio            DateTime
+  dataHoraFim               DateTime?
+  linkVideoconferencia      String?
+  versaoMaterial            String?
+  participantes             Json              // Lista de nomes/IDs
+  perguntaVigente           String?           @db.Text
+  produtoEmDesenvolvimento  String?           @db.Text
+  situacaoCronograma        String            @default("VERDE") // VERDE, AMARELO, VERMELHO
+  objetivo                  String?           @db.Text
+  solicitadoPor             String?           // "ORIENTADOR" ou "ORIENTANDO"
+  
+  // Seções da Ata (JSONB no PostgreSQL)
+  sinteseAvanco             Json
+  decisoes                  Json
+  riscos                    Json
+  planoTrabalho             Json
+  perguntasProximaEntrega   Json
+  proximoEncontro           Json
+
+  ataResumo                 String?           @db.Text
+  calendarEventId           String?
+  status                    StatusReuniao     @default(AGENDADA)
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  tarefas                   TarefaReuniao[]
+
+  @@index([projetoId])
+}
+
+model TarefaReuniao {
+  id            String        @id @default(uuid()) @db.Uuid
+  reuniaoId     String        @db.Uuid
+  reuniao       Reuniao       @relation(fields: [reuniaoId], references: [id], onDelete: Cascade)
+  responsavelId String        @db.Uuid
+  responsavel   Usuario       @relation(fields: [responsavelId], references: [id])
+  descricao     String        @db.Text
+  prazo         DateTime
+  concluida     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([reuniaoId])
+}
+
+model Documento {
+  id                   String             @id @default(uuid()) @db.Uuid
+  projetoId            String             @db.Uuid
+  projeto              ProjetoOrientacao  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  categoria            CategoriaDocumento @default(OUTRO)
+  titulo               String
+  versao               Int                @default(1)
+  driveFileId          String
+  tamanhoBytes         BigInt?
+  checksum             String?
+  comentariosOrientador String?            @db.Text
+  enviadoPorId         String             @db.Uuid
+  enviadoPor           Usuario            @relation(fields: [enviadoPorId], references: [id])
+  createdAt            DateTime           @default(now())
+
+  parecerLLM           ParecerLLM?
+
+  @@index([projetoId])
+}
+
+model ParecerLLM {
+  id                        String    @id @default(uuid()) @db.Uuid
+  documentoId               String    @unique @db.Uuid
+  documento                 Documento @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  resumo                    String    @db.Text
+  pontosFortes              String    @db.Text
+  lacunas                   String    @db.Text
+  orientacoesProximasEtapas String    @db.Text
+  modeloUsado               String
+  parecerLiberado           Boolean   @default(false)
+  geradoEm                  DateTime  @default(now())
+}
+
+model AuditoriaLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  usuarioId String?  @db.Uuid
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  acao      String
+  recurso   String
+  detalhes  String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId])
+}
+
+model DisponibilidadeOrientador {
+  id           String   @id @default(uuid()) @db.Uuid
+  orientadorId String   @db.Uuid
+  orientador   Usuario  @relation(fields: [orientadorId], references: [id], onDelete: Cascade)
+  diaSemana    Int      // 0 (Domingo) a 6 (Sábado)
+  horaInicio   String   // Formato "HH:MM" (ex: "14:00")
+  horaFim      String   // Formato "HH:MM" (ex: "15:00")
+  
+  @@unique([orientadorId, diaSemana, horaInicio])
+}
+
+enum StatusSecao {
+  PENDENTE
+  APROVADO
+  REVISAR
+}
+
+model SecaoTexto {
+  id         String      @id @default(uuid()) @db.Uuid
+  projetoId  String      @db.Uuid
+  projeto    ProjetoOrientacao @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  titulo     String      // ex: "Capítulo 1 - Introdução"
+  conteudo   String      @db.Text
+  status     StatusSecao @default(PENDENTE)
+  correcoes  String?     @db.Text // Sugestões e anotações do professor
+  versao     Int         @default(1)
+  parecerIA  String?     @db.Text
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  historicoVersoes VersaoSecaoTexto[]
+  auditoriasIA     AuditoriaIA[]
+
+  @@index([projetoId])
+}
+
+model VersaoSecaoTexto {
+  id           String      @id @default(uuid()) @db.Uuid
+  secaoId      String      @db.Uuid
+  secao        SecaoTexto  @relation(fields: [secaoId], references: [id], onDelete: Cascade)
+  versao       Int
+  conteudo     String      @db.Text
+  autorPapel   String      // "ORIENTANDO" ou "ORIENTADOR" (para as réplicas)
+  correcoes    String?     @db.Text
+  parecerIA    String?     @db.Text
+  createdAt    DateTime    @default(now())
+}
+
+model Notificacao {
+  id         String   @id @default(uuid()) @db.Uuid
+  usuarioId  String   @db.Uuid
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  titulo     String
+  mensagem   String   @db.Text
+  lida       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model ConfigAgendaAutomatica {
+  id           String   @id @default(uuid()) @db.Uuid
+  orientadorId String   @db.Uuid
+  orientador   Usuario  @relation(fields: [orientadorId], references: [id], onDelete: Cascade)
+  frequencia   String   // "QUINZENAL" ou "MENSAL"
+  diaSemana    Int      // 0 a 6
+  hora         String   // "14:00"
+  ativo        Boolean  @default(true)
+}
+
+model BibliotecaLeitura {
+  id         String            @id @default(uuid()) @db.Uuid
+  projetoId  String            @db.Uuid
+  projeto    ProjetoOrientacao @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  titulo     String
+  autor      String?
+  link       String?
+  observacao String?           @db.Text
+  createdAt  DateTime          @default(now())
+
+  @@index([projetoId])
+}
+
+model AuditoriaIA {
+  id            String      @id @default(uuid()) @db.Uuid
+  secaoTextoId  String      @db.Uuid
+  secaoTexto    SecaoTexto  @relation(fields: [secaoTextoId], references: [id], onDelete: Cascade)
+  classificacao String      // Ex: "Altamente provável de ser gerado por IA"
+  confianca     Int         // Confiança em porcentagem (0-100)
+  justificativa String      @db.Text
+  pontuacao     Int         // Pontuação 0 a 100
+  createdAt     DateTime    @default(now())
+
+  @@index([secaoTextoId])
+}

@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Cores Temáticas Estilo Radix/Shadcn */
+  --color-border: hsl(240 5.9% 90%);
+  --color-input: hsl(240 5.9% 90%);
+  --color-ring: hsl(240 5.9% 10%);
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(240 10% 3.9%);
+
+  --color-primary: hsl(240 5.9% 10%);
+  --color-primary-foreground: hsl(0 0% 98%);
+
+  --color-secondary: hsl(240 4.8% 95.9%);
+  --color-secondary-foreground: hsl(240 5.9% 10%);
+
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+
+  --color-muted: hsl(240 4.8% 95.9%);
+  --color-muted-foreground: hsl(240 3.8% 46.1%);
+
+  --color-accent: hsl(240 4.8% 95.9%);
+  --color-accent-foreground: hsl(240 5.9% 10%);
+
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(240 10% 3.9%);
+
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(240 10% 3.9%);
+
+  /* Tema Escuro */
+  --color-dark-border: hsl(240 3.7% 15.9%);
+  --color-dark-input: hsl(240 3.7% 15.9%);
+  --color-dark-ring: hsl(240 4.9% 83.9%);
+  --color-dark-background: hsl(240 10% 3.9%);
+  --color-dark-foreground: hsl(0 0% 98%);
+
+  --color-dark-primary: hsl(0 0% 98%);
+  --color-dark-primary-foreground: hsl(240 5.9% 10%);
+
+  --color-dark-secondary: hsl(240 3.7% 15.9%);
+  --color-dark-secondary-foreground: hsl(0 0% 98%);
+
+  --color-dark-destructive: hsl(0 62.8% 30.6%);
+  --color-dark-destructive-foreground: hsl(0 0% 98%);
+
+  --color-dark-muted: hsl(240 3.7% 15.9%);
+  --color-dark-muted-foreground: hsl(240 5% 64.9%);
+
+  --color-dark-accent: hsl(240 3.7% 15.9%);
+  --color-dark-accent-foreground: hsl(0 0% 98%);
+
+  --color-dark-popover: hsl(240 10% 3.9%);
+  --color-dark-popover-foreground: hsl(0 0% 98%);
+
+  --color-dark-card: hsl(240 10% 3.9%);
+  --color-dark-card-foreground: hsl(0 0% 98%);
+
+  --radius-lg: 0.75rem;
+  --radius-md: calc(0.75rem - 2px);
+  --radius-sm: calc(0.75rem - 4px);
+}
+
+:root {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 240 5.9% 90%;
+  --primary-foreground: 240 5.9% 10%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 240 4.9% 83.9%;
+}
+
+* {
+  border-color: var(--color-dark-border);
+}
+
+body {
+  background-color: #030712; /* Slate-950 */
+  color: #f8fafc; /* Slate-50 */
+  font-family: var(--font-sans);
+}
+
+/* Efeito de Vidro (Glassmorphism) */
+.glass {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-hover:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(99, 102, 241, 0.3); /* Indigo border glow */
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+/* Estilização da Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #030712;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
