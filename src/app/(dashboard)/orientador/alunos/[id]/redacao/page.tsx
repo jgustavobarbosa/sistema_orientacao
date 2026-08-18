@@ -111,6 +111,36 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Texto do Aluno & IA */}
                 <div className="space-y-4">
+                  {secao.oQueProduzi && (
+                    <div className="p-4 bg-slate-950/40 border border-slate-900 rounded-xl space-y-2">
+                      <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider border-b border-slate-900/60 pb-1.5">Relatório de Produção do Aluno</h4>
+                      <div className="space-y-2 text-xs">
+                        <div>
+                          <span className="font-bold text-slate-400 block text-[9px] uppercase tracking-wide">1. O que foi produzido:</span>
+                          <p className="text-slate-300 mt-0.5 leading-relaxed">{secao.oQueProduzi}</p>
+                        </div>
+                        {secao.oQueMudou && (
+                          <div>
+                            <span className="font-bold text-slate-400 block text-[9px] uppercase tracking-wide">2. O que mudou:</span>
+                            <p className="text-slate-300 mt-0.5 leading-relaxed">{secao.oQueMudou}</p>
+                          </div>
+                        )}
+                        {secao.ondeTenhoDuvida && (
+                          <div>
+                            <span className="font-bold text-slate-400 block text-[9px] uppercase tracking-wide">3. Dúvidas / Gargalos:</span>
+                            <p className="text-slate-300 mt-0.5 leading-relaxed">{secao.ondeTenhoDuvida}</p>
+                          </div>
+                        )}
+                        {secao.oQuePrecisoAvancar && (
+                          <div>
+                            <span className="font-bold text-slate-400 block text-[9px] uppercase tracking-wide">4. Necessidades para avançar:</span>
+                            <p className="text-slate-300 mt-0.5 leading-relaxed">{secao.oQuePrecisoAvancar}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-slate-450 uppercase tracking-wider">Texto do Aluno:</p>
                     <div className="p-4 bg-slate-950/60 border border-slate-900 rounded-xl text-sm text-slate-300 leading-relaxed whitespace-pre-line max-h-[250px] overflow-y-auto pr-1">
@@ -187,6 +217,92 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
                     <p className="text-xs font-bold text-slate-450 uppercase tracking-wider">Painel do Orientador:</p>
                     
                     <form className="space-y-4">
+                      {/* Rubrica 5D */}
+                      <div className="p-4 bg-slate-950/40 border border-slate-900 rounded-xl space-y-3">
+                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-1.5 border-b border-slate-900/60">Rubrica 5D de Avaliação</h4>
+                        
+                        <div className="space-y-2.5 text-xs text-slate-300">
+                          {/* Pertinência */}
+                          <div className="flex justify-between items-center gap-4">
+                            <span className="font-semibold text-slate-400">1. Pertinência</span>
+                            <select
+                              name="notaPertinencia"
+                              defaultValue={secao.notaPertinencia !== null ? secao.notaPertinencia : 2}
+                              className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-105 text-xs outline-none focus:border-indigo-500/50"
+                            >
+                              <option value={0}>0 — Inadequado</option>
+                              <option value={1}>1 — Insuficiente</option>
+                              <option value={2}>2 — Satisfatório</option>
+                              <option value={3}>3 — Excelente</option>
+                            </select>
+                          </div>
+
+                          {/* Coerência */}
+                          <div className="flex justify-between items-center gap-4">
+                            <span className="font-semibold text-slate-400">2. Coerência</span>
+                            <select
+                              name="notaCoerencia"
+                              defaultValue={secao.notaCoerencia !== null ? secao.notaCoerencia : 2}
+                              className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-105 text-xs outline-none focus:border-indigo-500/50"
+                            >
+                              <option value={0}>0 — Desalinhado</option>
+                              <option value={1}>1 — Parcial</option>
+                              <option value={2}>2 — Alinhado</option>
+                              <option value={3}>3 — Impecável</option>
+                            </select>
+                          </div>
+
+                          {/* Evidência */}
+                          <div className="flex justify-between items-center gap-4">
+                            <span className="font-semibold text-slate-400">3. Evidência</span>
+                            <select
+                              name="notaEvidencia"
+                              defaultValue={secao.notaEvidencia !== null ? secao.notaEvidencia : 2}
+                              className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-105 text-xs outline-none focus:border-indigo-500/50"
+                            >
+                              <option value={0}>0 — Sem fontes</option>
+                              <option value={1}>1 — Fraca</option>
+                              <option value={2}>2 — Consistente</option>
+                              <option value={3}>3 — Robusta</option>
+                            </select>
+                          </div>
+
+                          {/* Clareza */}
+                          <div className="flex justify-between items-center gap-4">
+                            <span className="font-semibold text-slate-400">4. Clareza</span>
+                            <select
+                              name="notaClareza"
+                              defaultValue={secao.notaClareza !== null ? secao.notaClareza : 2}
+                              className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-105 text-xs outline-none focus:border-indigo-500/50"
+                            >
+                              <option value={0}>0 — Confuso</option>
+                              <option value={1}>1 — Regular</option>
+                              <option value={2}>2 — Fluido</option>
+                              <option value={3}>3 — Acadêmico</option>
+                            </select>
+                          </div>
+
+                          {/* Conformidade */}
+                          <div className="flex justify-between items-center gap-4">
+                            <span className="font-semibold text-slate-400">5. Conformidade</span>
+                            <select
+                              name="notaConformidade"
+                              defaultValue={secao.notaConformidade !== null ? secao.notaConformidade : 2}
+                              className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-105 text-xs outline-none focus:border-indigo-500/50"
+                            >
+                              <option value={0}>0 — Fora das normas</option>
+                              <option value={1}>1 — Com pendências</option>
+                              <option value={2}>2 — Conforme</option>
+                              <option value={3}>3 — Rigoroso</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <p className="text-[9px] text-slate-500 italic mt-2">
+                          * Nota menor que 2 em qualquer critério rebaixa automaticamente para REVISAR ao submeter.
+                        </p>
+                      </div>
+
                       <div className="space-y-1.5">
                         <label htmlFor="correcoes" className="text-xs font-semibold text-slate-400">
                           Correções, Comentários e Ajustes
@@ -197,7 +313,7 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
                           rows={4}
                           defaultValue={secao.correcoes || ''}
                           placeholder="Adicione observações, cortes ou o que reescrever para auxiliar o aluno..."
-                          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none resize-none"
+                          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none resize-none placeholder:text-slate-800 leading-relaxed"
                         />
                       </div>
 

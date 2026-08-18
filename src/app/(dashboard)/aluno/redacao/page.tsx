@@ -92,8 +92,58 @@ export default async function AlunoRedacaoPage() {
                   required
                   rows={10}
                   placeholder="Escreva ou cole aqui a redação completa desta seção para que o orientador faça as correções..."
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm placeholder-slate-650 outline-none resize-none"
+                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm placeholder-slate-650 outline-none resize-none font-mono leading-relaxed"
                 />
+              </div>
+
+              {/* Protocolo de 4 blocos */}
+              <div className="border-t border-slate-900/40 pt-4 space-y-3.5">
+                <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Protocolo de Submissão</h4>
+                
+                <div className="space-y-1">
+                  <label htmlFor="oQueProduzi" className="text-[10px] text-slate-400 block font-semibold">1. O que produzi nesta versão?</label>
+                  <input
+                    type="text"
+                    id="oQueProduzi"
+                    name="oQueProduzi"
+                    required
+                    placeholder="ex: Redigi os parágrafos sobre delimitação espacial..."
+                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label htmlFor="oQueMudou" className="text-[10px] text-slate-400 block font-semibold">2. O que mudou em relação à versão anterior?</label>
+                  <input
+                    type="text"
+                    id="oQueMudou"
+                    name="oQueMudou"
+                    placeholder="ex: Ajustei a hipótese C baseado no feedback..."
+                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label htmlFor="ondeTenhoDuvida" className="text-[10px] text-slate-400 block font-semibold">3. Onde tenho dúvida ou gargalo?</label>
+                  <input
+                    type="text"
+                    id="ondeTenhoDuvida"
+                    name="ondeTenhoDuvida"
+                    placeholder="ex: Profundidade da revisão sistemática..."
+                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label htmlFor="oQuePrecisoAvancar" className="text-[10px] text-slate-400 block font-semibold">4. O que preciso para avançar?</label>
+                  <input
+                    type="text"
+                    id="oQuePrecisoAvancar"
+                    name="oQuePrecisoAvancar"
+                    placeholder="ex: Feedback metodológico..."
+                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+                  />
+                </div>
               </div>
 
               <button

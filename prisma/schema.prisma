@@ -6,6 +6,46 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum ModalidadeAcademica {
+  IC
+  TCC
+  ESPECIALIZACAO
+  MESTRADO
+  DOUTORADO
+  POS_DOC
+}
+
+enum TipoProdutoAcademico {
+  PROJ_PESQ
+  MONO
+  ART_EMP
+  REV_EST
+  PROD_TEC
+  DISS
+  TESE_ART
+  REL_TEC
+}
+
+enum EtapaOrientacao {
+  E0_ACOLHIMENTO
+  E1_DELIMITACAO
+  E2_FUNDAMENTACAO
+  E3_METODO
+  E4_COLETA_DESENVOLVIMENTO
+  E5_ANALISE
+  E6_REDACAO_INTEGRADA
+  E7_PRE_DEFESA
+  E8_POS_DEFESA
+}
+
+enum SituacaoEtica {
+  NAO_SE_APLICA
+  ANALISE_DOCUMENTAL
+  SUBMISSAO_NECESSARIA
+  APROVACAO_EM_ANDAMENTO
+  APROVADO
+}
+
 enum PapelUsuario {
   ORIENTADOR
   ORIENTANDO
@@ -97,12 +137,25 @@ model ProjetoOrientacao {
   orientandoId     String        @db.Uuid
   orientando       Usuario       @relation("ProjetosComoOrientando", fields: [orientandoId], references: [id])
   titulo           String
-  perguntaPesquisa String?       @db.Text
+  perguntaPesquisa String?              @db.Text
   nivel            NivelProjeto
+  modalidade       ModalidadeAcademica  @default(TCC)
+  tipoProduto      TipoProdutoAcademico @default(MONO)
+  etapaAtual       EtapaOrientacao      @default(E0_ACOLHIMENTO)
   programa         String?
-  dataInicio       DateTime      @default(now())
+  temaFrase        String?              @db.Text
+  problemaPercebido String?             @db.Text
+  objetivoGeral    String?              @db.Text
+  publicoContexto  String?              @db.Text
+  produtoEsperado  String?              @db.Text
+  acessoCampo      String?              @db.Text
+  situacaoEtica    SituacaoEtica        @default(NAO_SE_APLICA)
+  apoiosRestricoes String?              @db.Text
+  normasEntrega    String?              @db.Text
+  textoDiagnostico String?              @db.Text
+  dataInicio       DateTime             @default(now())
   prazoDefesa      DateTime?
-  status           StatusProjeto @default(EM_ANDAMENTO)
+  status           StatusProjeto        @default(EM_ANDAMENTO)
   driveFolderId    String?
   linkMeetFixo     String        @default("https://meet.google.com/fxv-mbbh-rqj")
   createdAt        DateTime      @default(now())
@@ -250,20 +303,35 @@ enum StatusSecao {
 }
 
 model SecaoTexto {
-  id         String      @id @default(uuid()) @db.Uuid
-  projetoId  String      @db.Uuid
-  projeto    ProjetoOrientacao @relation(fields: [projetoId], references: [id], onDelete: Cascade)
-  titulo     String      // ex: "Capítulo 1 - Introdução"
-  conteudo   String      @db.Text
-  status     StatusSecao @default(PENDENTE)
-  correcoes  String?     @db.Text // Sugestões e anotações do professor
-  versao     Int         @default(1)
-  parecerIA  String?     @db.Text
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id                 String            @id @default(uuid()) @db.Uuid
+  projetoId          String            @db.Uuid
+  projeto            ProjetoOrientacao @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  titulo             String            // ex: "Capítulo 1 - Introdução"
+  conteudo           String            @db.Text
+  status             StatusSecao       @default(PENDENTE)
+  correcoes          String?           @db.Text // Sugestões e anotações do professor
+  versao             Int               @default(1)
+  parecerIA          String?           @db.Text
+  
+  // Protocolo de submissão de 4 blocos
+  oQueProduzi        String?           @db.Text
+  oQueMudou          String?           @db.Text
+  ondeTenhoDuvida    String?           @db.Text
+  oQuePrecisoAvancar String?           @db.Text
 
-  historicoVersoes VersaoSecaoTexto[]
-  auditoriasIA     AuditoriaIA[]
+  // Rubrica 5D de avaliação pelo orientador
+  notaPertinencia    Int?              // 0 a 3
+  notaCoerencia      Int?              // 0 a 3
+  notaEvidencia      Int?              // 0 a 3
+  notaClareza        Int?              // 0 a 3
+  notaConformidade   Int?              // 0 a 3
+  parecerNotas       String?           @db.Text
+
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  historicoVersoes   VersaoSecaoTexto[]
+  auditoriasIA       AuditoriaIA[]
 
   @@index([projetoId])
 }

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { alternarTarefa, alternarMarcoStatus } from '@/app/actions';
 import { CountdownTimer } from '@/components/countdown-timer';
+import { FormOnboardingFichaInicial } from '@/components/form-onboarding-ficha-inicial';
 
 function AlunoDashboardContent() {
   const { data: session } = useSession();
@@ -210,7 +211,14 @@ function AlunoDashboardContent() {
     );
   }
 
-  // 3. Projeto Ativo: Renderizar Dashboard Preditivo & Estrutural Completo
+  // 3. Caso o projeto esteja na etapa inicial E0_ACOLHIMENTO e precise preencher a Ficha Inicial de Onboarding
+  if (projeto.etapaAtual === 'E0_ACOLHIMENTO') {
+    return (
+      <FormOnboardingFichaInicial projeto={projeto} onComplete={fetchDashboardData} />
+    );
+  }
+
+  // 4. Projeto Ativo: Renderizar Dashboard Preditivo & Estrutural Completo
   const hoje = new Date();
 
   // Mapeamento dos Pilares Estruturais da conformidade ABNT / Acadêmica

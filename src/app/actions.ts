@@ -790,6 +790,11 @@ export async function submeterSecao(projetoId: string, formData: FormData) {
     const titulo = formData.get('titulo') as string;
     const conteudo = formData.get('conteudo') as string;
 
+    const oQueProduzi = formData.get('oQueProduzi') as string || null;
+    const oQueMudou = formData.get('oQueMudou') as string || null;
+    const ondeTenhoDuvida = formData.get('ondeTenhoDuvida') as string || null;
+    const oQuePrecisoAvancar = formData.get('oQuePrecisoAvancar') as string || null;
+
     if (!titulo || !conteudo) {
       throw new Error('Título e conteúdo são obrigatórios.');
     }
@@ -841,7 +846,11 @@ export async function submeterSecao(projetoId: string, formData: FormData) {
           conteudo,
           status: 'PENDENTE',
           versao: novaVersao,
-          parecerIA
+          parecerIA,
+          oQueProduzi,
+          oQueMudou,
+          ondeTenhoDuvida,
+          oQuePrecisoAvancar
         }
       });
     } else {
@@ -851,7 +860,11 @@ export async function submeterSecao(projetoId: string, formData: FormData) {
           titulo,
           conteudo,
           status: 'PENDENTE',
-          versao: 1
+          versao: 1,
+          oQueProduzi,
+          oQueMudou,
+          ondeTenhoDuvida,
+          oQuePrecisoAvancar
         }
       });
     }
@@ -885,12 +898,41 @@ export async function revisarSecao(secaoId: string, status: 'APROVADO' | 'REVISA
     const { prisma } = await import('@/lib/db');
     
     const correcoes = formData.get('correcoes') as string;
+    const notaPertinencia = parseInt(formData.get('notaPertinencia') as string || '0');
+    const notaCoerencia = parseInt(formData.get('notaCoerencia') as string || '0');
+    const notaEvidencia = parseInt(formData.get('notaEvidencia') as string || '0');
+    const notaClareza = parseInt(formData.get('notaClareza') as string || '0');
+    const notaConformidade = parseInt(formData.get('notaConformidade') as string || '0');
+
+    // Hard-gate da Rubrica 5D: aprovação exige nota >= 2 em todas as dimensões
+    let statusFinal = status;
+    let correcoesFinais = correcoes;
+
+    if (status === 'APROVADO') {
+      const temNotaBaixa = 
+        notaPertinencia < 2 || 
+        notaCoerencia < 2 || 
+        notaEvidencia < 2 || 
+        notaClareza < 2 || 
+        notaConformidade < 2;
+
+      if (temNotaBaixa) {
+        statusFinal = 'REVISAR';
+        const avisoRubrica = `[REBAIXADO AUTOMATICAMENTE: Notas da Rubrica 5D inferiores a 2/3 exigem revisão científica obrigatória.]\n\n`;
+        correcoesFinais = avisoRubrica + (correcoes || '');
+      }
+    }
 
     const secao = await prisma.secaoTexto.update({
       where: { id: secaoId },
       data: {
-        status,
-        correcoes
+        status: statusFinal as any,
+        correcoes: correcoesFinais,
+        notaPertinencia,
+        notaCoerencia,
+        notaEvidencia,
+        notaClareza,
+        notaConformidade
       },
       include: {
         projeto: {
@@ -905,7 +947,7 @@ export async function revisarSecao(secaoId: string, status: 'APROVADO' | 'REVISA
     await criarNotificacao(
       orientandoId,
       'Capítulo Avaliado',
-      `Seu orientador avaliou o capítulo "${secao.titulo}" como ${status === 'APROVADO' ? 'Aprovado' : 'Revisar'}.`
+      `Seu orientador avaliou o capítulo "${secao.titulo}" como ${statusFinal === 'APROVADO' ? 'Aprovado' : 'Revisar'}.`
     );
 
     revalidatePath('/aluno/redacao');
@@ -913,7 +955,7 @@ export async function revisarSecao(secaoId: string, status: 'APROVADO' | 'REVISA
 
     // Notificar Aluno por e-mail via Resend (Simulado/Real)
     try {
-      console.log(`[E-mail Notificação] Orientador ${secao.projeto.orientador.nome} atualizou status da seção "${secao.titulo}" para ${status}. Enviando e-mail para ${secao.projeto.orientando.email}...`);
+      console.log(`[E-mail Notificação] Orientador ${secao.projeto.orientador.nome} atualizou status da seção "${secao.titulo}" para ${statusFinal}. Enviando e-mail para ${secao.projeto.orientando.email}...`);
     } catch (e) {
       console.error('Erro ao enviar e-mail de notificação de revisão:', e);
     }
