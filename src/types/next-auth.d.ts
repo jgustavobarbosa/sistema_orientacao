@@ -7,6 +7,7 @@ declare module 'next-auth' {
       id: string;
       papel: PapelUsuario;
       ativo: boolean;
+      emailConfirmado: boolean;
     } & DefaultSession['user'];
   }
 
@@ -14,6 +15,7 @@ declare module 'next-auth' {
     id: string;
     papel: PapelUsuario;
     ativo: boolean;
+    emailConfirmado: boolean;
   }
 }
 
@@ -22,5 +24,6 @@ declare module 'next-auth/jwt' {
     id: string;
     papel: PapelUsuario;
     ativo: boolean;
+    emailConfirmado: boolean;
   }
 }

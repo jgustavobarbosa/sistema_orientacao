@@ -63,15 +63,21 @@ enum CategoriaDocumento {
 }
 
 model Usuario {
-  id         String       @id @default(uuid()) @db.Uuid
-  nome       String
-  email      String       @unique
-  papel      PapelUsuario @default(ORIENTANDO)
-  googleId   String?
-  ativo      Boolean      @default(false)
-  avatarUrl  String?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id               String       @id @default(uuid()) @db.Uuid
+  nome             String
+  email            String       @unique
+  papel            PapelUsuario @default(ORIENTANDO)
+  senha            String?
+  whatsapp         String?
+  ativo            Boolean      @default(false)
+  emailConfirmado  Boolean      @default(false)
+  confirmToken     String?      @unique
+  confirmTokenExp  DateTime?
+  resetToken       String?      @unique
+  resetTokenExp    DateTime?
+  avatarUrl        String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   projetosOrientador ProjetoOrientacao[] @relation("ProjetosComoOrientador")
   projetosOrientando ProjetoOrientacao[] @relation("ProjetosComoOrientando")
