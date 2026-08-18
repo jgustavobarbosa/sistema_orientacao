@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 260" role="img" aria-label="SOIA — Sistema de Orientação Inteligente Avançado">
+  <g transform="translate(8 2)">
+    <path d="M202 42H112C65 42 42 70 42 101c0 25 17 43 42 47" fill="none" stroke="#2563EB" stroke-width="24" stroke-linecap="round"/>
+    <path d="M54 214h90c47 0 70-28 70-59 0-25-17-43-42-47" fill="none" stroke="#2563EB" stroke-width="24" stroke-linecap="round"/>
+    <path d="M89 113a48 48 0 0 1 70-25M167 143a48 48 0 0 1-70 25" fill="none" stroke="#06B6D4" stroke-width="16" stroke-linecap="round"/>
+    <circle cx="128" cy="128" r="24" fill="#2563EB"/>
+    <circle cx="202" cy="42" r="10" fill="#06B6D4"/>
+    <circle cx="54" cy="214" r="10" fill="#06B6D4"/>
+  </g>
+  <text x="300" y="150" fill="#0B1220" font-family="Inter, Montserrat, Arial, sans-serif" font-size="124" font-weight="700" letter-spacing="8">SOIA</text>
+  <text x="306" y="202" fill="#475569" font-family="Inter, Montserrat, Arial, sans-serif" font-size="19" font-weight="600" letter-spacing="4">SISTEMA DE ORIENTAÇÃO INTELIGENTE AVANÇADO</text>
+</svg>

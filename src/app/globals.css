@@ -228,3 +228,217 @@ a, button, select, input, textarea, .glass-hover {
     transform: translateX(0);
   }
 }
+
+/* --- ABERTURA SOIA --- */
+:root {
+  --navy: #0B1220;
+  --blue: #2563EB;
+  --cyan: #06B6D4;
+  --muted: #94A3B8;
+}
+
+.soia-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 45%, #11254b 0, var(--navy) 52%, #070d18 100%);
+  transition: opacity .55s ease, visibility .55s ease;
+}
+
+.soia-intro::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(115deg, transparent 40%, rgba(37, 99, 235, 0.08), transparent 60%);
+  animation: sweep 2.8s ease both;
+}
+
+.soia-brand {
+  width: min(820px, 84vw);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  align-items: center;
+  gap: 54px;
+}
+
+.soia-mark {
+  width: 220px;
+  overflow: visible;
+}
+
+.route {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  animation: draw .85s cubic-bezier(.65, 0, .35, 1) forwards;
+}
+
+.route.lower {
+  animation-delay: .38s;
+}
+
+.orbit {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 95;
+  stroke-dashoffset: 95;
+  animation: draw .5s ease .8s forwards;
+}
+
+.node {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nodeIn .32s ease forwards;
+}
+
+.node.a {
+  animation-delay: .15s;
+}
+
+.node.b {
+  animation-delay: .72s;
+}
+
+.core {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: coreIn .55s cubic-bezier(.2, 1.7, .4, 1) 1.1s forwards;
+}
+
+.wording {
+  overflow: hidden;
+}
+
+.wordmark-intro {
+  font-size: clamp(64px, 9vw, 120px);
+  line-height: .9;
+  font-weight: 700;
+  letter-spacing: .08em;
+  opacity: 0;
+  transform: translateY(24px);
+  animation: reveal .58s ease 1.35s forwards;
+}
+
+.tagline-intro {
+  margin-top: 24px;
+  color: var(--muted);
+  font-size: clamp(10px, 1.5vw, 18px);
+  font-weight: 600;
+  letter-spacing: .22em;
+  white-space: nowrap;
+  opacity: 0;
+  animation: fade .55s ease 1.75s forwards;
+}
+
+.soia-intro.done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.skip {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  border: 1px solid #334155;
+  background: #0f1a2e;
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes nodeIn {
+  from {
+    opacity: 0;
+    transform: scale(.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes coreIn {
+  0% {
+    opacity: 0;
+    transform: scale(.25);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.22);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-30%);
+  }
+  to {
+    transform: translateX(30%);
+  }
+}
+
+@media(max-width: 680px) {
+  .soia-brand {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 28px;
+    text-align: center;
+  }
+  .soia-mark {
+    width: 160px;
+  }
+  .tagline-intro {
+    white-space: normal;
+    line-height: 1.8;
+    margin-top: 18px;
+  }
+}
+
+@media(prefers-reduced-motion: reduce) {
+  .soia-intro * {
+    animation: none !important;
+  }
+  .route, .orbit {
+    stroke-dashoffset: 0;
+  }
+  .node, .core, .wordmark-intro, .tagline-intro {
+    opacity: 1;
+    transform: none;
+  }
+  .soia-intro {
+    position: relative;
+    min-height: 100svh;
+  }
+}

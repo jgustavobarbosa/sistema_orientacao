@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Abertura SOIA</title>
+  <style>
+    :root{color-scheme:dark;--navy:#0B1220;--blue:#2563EB;--cyan:#06B6D4;--muted:#94A3B8}
+    *{box-sizing:border-box} body{margin:0;background:var(--navy);font-family:Inter,Montserrat,Arial,sans-serif;color:#fff}
+    .soia-intro{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 45%,#11254b 0,var(--navy) 52%,#070d18 100%);transition:opacity .55s ease,visibility .55s ease}
+    .soia-intro::before{content:"";position:absolute;inset:-30%;background:linear-gradient(115deg,transparent 40%,rgba(37,99,235,.08),transparent 60%);animation:sweep 2.8s ease both}
+    .soia-brand{width:min(820px,84vw);display:grid;grid-template-columns:220px 1fr;align-items:center;gap:54px}
+    .soia-mark{width:220px;overflow:visible}.route{fill:none;stroke-linecap:round;stroke-dasharray:260;stroke-dashoffset:260;animation:draw .85s cubic-bezier(.65,0,.35,1) forwards}.route.lower{animation-delay:.38s}.orbit{fill:none;stroke-linecap:round;stroke-dasharray:95;stroke-dashoffset:95;animation:draw .5s ease .8s forwards}.node{opacity:0;transform-box:fill-box;transform-origin:center;animation:nodeIn .32s ease forwards}.node.a{animation-delay:.15s}.node.b{animation-delay:.72s}.core{opacity:0;transform-box:fill-box;transform-origin:center;animation:coreIn .55s cubic-bezier(.2,1.7,.4,1) 1.1s forwards}
+    .wording{overflow:hidden}.wordmark{font-size:clamp(64px,9vw,120px);line-height:.9;font-weight:700;letter-spacing:.08em;opacity:0;transform:translateY(24px);animation:reveal .58s ease 1.35s forwards}.tagline{margin-top:24px;color:var(--muted);font-size:clamp(10px,1.5vw,18px);font-weight:600;letter-spacing:.22em;white-space:nowrap;opacity:0;animation:fade .55s ease 1.75s forwards}
+    .soia-intro.done{opacity:0;visibility:hidden;pointer-events:none}.skip{position:absolute;right:28px;bottom:24px;border:1px solid #334155;background:#0f1a2e;color:#cbd5e1;border-radius:999px;padding:10px 16px;cursor:pointer}
+    .demo{min-height:100vh;padding:28px 6vw;background:linear-gradient(135deg,#0B1220,#07101f)}.demo header{display:flex;align-items:center;gap:14px}.demo header img{width:42px}.demo h1{margin-top:30vh;font-size:clamp(36px,6vw,76px);max-width:900px}.demo p{color:#94a3b8;max-width:700px;font-size:20px;line-height:1.6}
+    @keyframes draw{to{stroke-dashoffset:0}}@keyframes nodeIn{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}@keyframes coreIn{0%{opacity:0;transform:scale(.25)}60%{opacity:1;transform:scale(1.22)}100%{opacity:1;transform:scale(1)}}@keyframes reveal{to{opacity:1;transform:none}}@keyframes fade{to{opacity:1}}@keyframes sweep{from{transform:translateX(-30%)}to{transform:translateX(30%)}}
+    @media(max-width:680px){.soia-brand{grid-template-columns:1fr;justify-items:center;gap:28px;text-align:center}.soia-mark{width:160px}.tagline{white-space:normal;line-height:1.8;margin-top:18px}}
+    @media(prefers-reduced-motion:reduce){.soia-intro *{animation:none!important}.route,.orbit{stroke-dashoffset:0}.node,.core,.wordmark,.tagline{opacity:1;transform:none}.soia-intro{position:relative;min-height:100svh}}
+  </style>
+</head>
+<body>
+  <section class="soia-intro" id="soiaIntro" aria-label="Apresentação SOIA">
+    <div class="soia-brand">
+      <svg class="soia-mark" viewBox="0 0 256 256" aria-hidden="true">
+        <path class="route upper" d="M202 42H112C65 42 42 70 42 101c0 25 17 43 42 47" stroke="#2563EB" stroke-width="24"/>
+        <path class="route lower" d="M54 214h90c47 0 70-28 70-59 0-25-17-43-42-47" stroke="#2563EB" stroke-width="24"/>
+        <path class="orbit" d="M89 113a48 48 0 0 1 70-25" stroke="#06B6D4" stroke-width="16"/>
+        <path class="orbit" d="M167 143a48 48 0 0 1-70 25" stroke="#06B6D4" stroke-width="16"/>
+        <circle class="core" cx="128" cy="128" r="24" fill="#2563EB"/>
+        <circle class="node a" cx="202" cy="42" r="10" fill="#06B6D4"/>
+        <circle class="node b" cx="54" cy="214" r="10" fill="#06B6D4"/>
+      </svg>
+      <div class="wording"><div class="wordmark">SOIA</div><div class="tagline">SISTEMA DE ORIENTAÇÃO INTELIGENTE AVANÇADO</div></div>
+    </div>
+    <button class="skip" type="button" id="skipIntro">Pular abertura</button>
+  </section>
+  <main class="demo">
+    <header><img src="soia-icon.svg" alt=""><strong>SOIA</strong></header>
+    <h1>Gestão científica inteligente em um só espaço.</h1>
+    <p>Exemplo de transição da abertura para a landing page. Substitua este conteúdo pela página real do sistema.</p>
+  </main>
+  <script>
+    const intro=document.getElementById('soiaIntro');
+    const close=()=>intro.classList.add('done');
+    document.getElementById('skipIntro').addEventListener('click',close);
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches){setTimeout(close,3200)}
+  </script>
+</body>
+</html>

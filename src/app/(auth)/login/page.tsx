@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { AlertCircle, ArrowRight, BookOpen, Calendar, ShieldCheck, Cpu, GraduationCap } from 'lucide-react';
+import { AlertCircle, ArrowRight, BookOpen, Calendar, ShieldCheck, Cpu } from 'lucide-react';
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -52,17 +52,13 @@ function LoginContent() {
       {/* Coluna Esquerda: Apresentação / Landing Page */}
       <div className="lg:col-span-7 space-y-8 text-left animate-slide-left">
         <div className="space-y-5">
-          {/* Logo Limpa em Branco no canto superior esquerdo com nome aberto */}
+          {/* Logo Oficial do Kit de Identidade em SVG */}
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white text-slate-950 rounded-xl shadow-lg">
-              <GraduationCap className="h-6 w-6 font-bold" />
-            </div>
-            <div>
-              <span className="text-2xl font-black tracking-tight text-white leading-none block">SOIA</span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block leading-none mt-1">
-                Sistema de Orientação Inteligente Avançado
-              </span>
-            </div>
+            <img 
+              src="/kit-identidade/soia-logo-dark.svg" 
+              alt="SOIA Logo" 
+              className="h-10 object-contain min-h-[32px]"
+            />
           </div>
           
           <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight pt-2">
@@ -131,9 +127,11 @@ function LoginContent() {
         <div className="w-full max-w-md px-6 py-10 glass rounded-3xl shadow-2xl relative">
           
           <div className="flex flex-col items-center text-center space-y-4 mb-6">
-            <div className="p-3 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl">
-              <GraduationCap className="h-7 w-7" />
-            </div>
+            <img 
+              src="/kit-identidade/soia-app-icon.svg" 
+              alt="SOIA App Icon" 
+              className="h-12 w-12 object-contain"
+            />
             <div>
               <h2 className="text-xl font-extrabold tracking-tight text-slate-100">
                 Acessar Plataforma
@@ -225,8 +223,54 @@ function LoginContent() {
 }
 
 export default function LoginPage() {
+  const [showIntro, setShowIntro] = React.useState(false);
+  const [introDone, setIntroDone] = React.useState(false);
+
+  React.useEffect(() => {
+    const alreadySeen = sessionStorage.getItem('soia-intro-seen');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    if (!alreadySeen && !prefersReducedMotion) {
+      setShowIntro(true);
+      const timer = setTimeout(() => {
+        handleCloseIntro();
+      }, 3200);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCloseIntro = () => {
+    setIntroDone(true);
+    sessionStorage.setItem('soia-intro-seen', '1');
+    setTimeout(() => {
+      setShowIntro(false);
+    }, 550);
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-transparent px-6 py-12">
+      {/* Abertura SOIA */}
+      {showIntro && (
+        <section className={`soia-intro ${introDone ? 'done' : ''}`} aria-label="Apresentação SOIA">
+          <div className="soia-brand">
+            <svg className="soia-mark" viewBox="0 0 256 256" aria-hidden="true">
+              <path className="route upper" d="M202 42H112C65 42 42 70 42 101c0 25 17 43 42 47" stroke="#2563EB" strokeWidth="24"/>
+              <path className="route lower" d="M54 214h90c47 0 70-28 70-59 0-25-17-43-42-47" stroke="#2563EB" strokeWidth="24"/>
+              <path className="orbit" d="M89 113a48 48 0 0 1 70-25" stroke="#06B6D4" strokeWidth="16"/>
+              <path className="orbit" d="M167 143a48 48 0 0 1-70 25" stroke="#06B6D4" strokeWidth="16"/>
+              <circle className="core" cx="128" cy="128" r="24" fill="#2563EB"/>
+              <circle className="node a" cx="202" cy="42" r="10" fill="#06B6D4"/>
+              <circle className="node b" cx="54" cy="214" r="10" fill="#06B6D4"/>
+            </svg>
+            <div className="wording">
+              <div className="wordmark-intro">SOIA</div>
+              <div className="tagline-intro">SISTEMA DE ORIENTAÇÃO INTELIGENTE AVANÇADO</div>
+            </div>
+          </div>
+          <button className="skip" type="button" onClick={handleCloseIntro}>Pular abertura</button>
+        </section>
+      )}
+
       {/* Vídeo de Fundo Dinâmico */}
       <video
         autoPlay
