@@ -5,64 +5,36 @@
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Cores Temáticas Estilo Radix/Shadcn */
-  --color-border: hsl(240 5.9% 90%);
-  --color-input: hsl(240 5.9% 90%);
-  --color-ring: hsl(240 5.9% 10%);
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(240 10% 3.9%);
+  --color-border: hsl(240 3.7% 15.9%);
+  --color-input: hsl(240 3.7% 15.9%);
+  --color-ring: hsl(217 91.2% 59.8%);
+  --color-background: #030712;
+  --color-foreground: hsl(0 0% 98%);
 
-  --color-primary: hsl(240 5.9% 10%);
+  --color-primary: #1d4ed8;
   --color-primary-foreground: hsl(0 0% 98%);
 
-  --color-secondary: hsl(240 4.8% 95.9%);
-  --color-secondary-foreground: hsl(240 5.9% 10%);
+  --color-secondary: hsl(240 3.7% 15.9%);
+  --color-secondary-foreground: hsl(0 0% 98%);
 
-  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive: hsl(0 62.8% 30.6%);
   --color-destructive-foreground: hsl(0 0% 98%);
 
-  --color-muted: hsl(240 4.8% 95.9%);
-  --color-muted-foreground: hsl(240 3.8% 46.1%);
+  --color-muted: hsl(240 3.7% 15.9%);
+  --color-muted-foreground: hsl(240 5% 64.9%);
 
-  --color-accent: hsl(240 4.8% 95.9%);
-  --color-accent-foreground: hsl(240 5.9% 10%);
+  --color-accent: rgba(59, 130, 246, 0.1);
+  --color-accent-foreground: #60a5fa;
 
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(240 10% 3.9%);
+  --color-popover: #0b0f19;
+  --color-popover-foreground: hsl(0 0% 98%);
 
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(240 10% 3.9%);
+  --color-card: #0b0f19;
+  --color-card-foreground: hsl(0 0% 98%);
 
-  /* Tema Escuro */
-  --color-dark-border: hsl(240 3.7% 15.9%);
-  --color-dark-input: hsl(240 3.7% 15.9%);
-  --color-dark-ring: hsl(240 4.9% 83.9%);
-  --color-dark-background: hsl(240 10% 3.9%);
-  --color-dark-foreground: hsl(0 0% 98%);
-
-  --color-dark-primary: hsl(0 0% 98%);
-  --color-dark-primary-foreground: hsl(240 5.9% 10%);
-
-  --color-dark-secondary: hsl(240 3.7% 15.9%);
-  --color-dark-secondary-foreground: hsl(0 0% 98%);
-
-  --color-dark-destructive: hsl(0 62.8% 30.6%);
-  --color-dark-destructive-foreground: hsl(0 0% 98%);
-
-  --color-dark-muted: hsl(240 3.7% 15.9%);
-  --color-dark-muted-foreground: hsl(240 5% 64.9%);
-
-  --color-dark-accent: hsl(240 3.7% 15.9%);
-  --color-dark-accent-foreground: hsl(0 0% 98%);
-
-  --color-dark-popover: hsl(240 10% 3.9%);
-  --color-dark-popover-foreground: hsl(0 0% 98%);
-
-  --color-dark-card: hsl(240 10% 3.9%);
-  --color-dark-card-foreground: hsl(0 0% 98%);
-
-  --radius-lg: 0.75rem;
-  --radius-md: calc(0.75rem - 2px);
-  --radius-sm: calc(0.75rem - 4px);
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
 }
 
 :root {
@@ -72,7 +44,7 @@
   --card-foreground: 0 0% 98%;
   --popover: 240 10% 3.9%;
   --popover-foreground: 0 0% 98%;
-  --primary: 240 5.9% 90%;
+  --primary: 217 91.2% 59.8%;
   --primary-foreground: 240 5.9% 10%;
   --secondary: 240 3.7% 15.9%;
   --secondary-foreground: 0 0% 98%;
@@ -84,25 +56,58 @@
   --destructive-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  --ring: 217 91.2% 59.8%;
 }
 
 * {
-  border-color: var(--color-dark-border);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 body {
-  background-color: #030712; /* Slate-950 */
+  background: radial-gradient(circle at 50% -20%, #0d1e40 0%, #030712 70%);
+  background-attachment: fixed;
   color: #f8fafc; /* Slate-50 */
   font-family: var(--font-sans);
+  overflow-x: hidden;
+  position: relative;
 }
 
-/* Efeito de Vidro (Glassmorphism) */
+/* Fundo com nuances da marca transitando com movimento sutil */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background: radial-gradient(circle at 15% 25%, rgba(29, 78, 216, 0.12) 0%, transparent 45%),
+              radial-gradient(circle at 85% 75%, rgba(37, 99, 235, 0.08) 0%, transparent 55%),
+              radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.05) 0%, transparent 65%);
+  filter: blur(90px);
+  animation: backgroundMove 25s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes backgroundMove {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(40px, -30px) scale(1.08);
+  }
+  100% {
+    transform: translate(-30px, 50px) scale(0.96);
+  }
+}
+
+/* Efeito de Vidro Ultra-Premium (Glassmorphism) */
 .glass {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 15, 25, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
 .glass-hover {
@@ -110,9 +115,47 @@ body {
 }
 
 .glass-hover:hover {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(99, 102, 241, 0.3); /* Indigo border glow */
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+  background: rgba(11, 15, 25, 0.85);
+  border-color: rgba(59, 130, 246, 0.25); /* Blue border glow */
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.12), 0 4px 30px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Customizar cores do site para azul-escuro / azul-elétrico premium */
+.bg-indigo-600 {
+  background-color: #1d4ed8 !important; /* Royal Blue */
+}
+.bg-indigo-650 {
+  background-color: #1e40af !important; /* Deep Royal Blue */
+}
+.bg-indigo-600:hover, .bg-indigo-650:hover {
+  background-color: #2563eb !important; /* Electric Blue */
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.25) !important;
+}
+.text-indigo-400 {
+  color: #60a5fa !important; /* Light blue accent */
+}
+.text-indigo-350 {
+  color: #93c5fd !important;
+}
+.text-indigo-200 {
+  color: #bfdbfe !important;
+}
+.border-indigo-500\/20 {
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+.bg-indigo-500\/10 {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+}
+.shadow-indigo-600\/10 {
+  box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.1), 0 2px 4px -2px rgba(29, 78, 216, 0.1) !important;
+}
+
+/* Sidebar Gradient Active State */
+.bg-gradient-to-r.from-indigo-600\/20.to-purple-600\/10 {
+  background-image: linear-gradient(to right, rgba(29, 78, 216, 0.15), rgba(30, 58, 138, 0.05)) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+  color: #93c5fd !important;
 }
 
 /* Estilização da Scrollbar */
@@ -131,5 +174,5 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #2563eb;
 }
