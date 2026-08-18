@@ -36,13 +36,13 @@ export function AppSidebar({ session }: { session: Session }) {
       ];
 
   return (
-    <aside className="w-64 border-r border-slate-900/60 bg-slate-950 flex flex-col z-50">
+    <aside className="w-64 border-r border-slate-900/60 bg-slate-950/60 backdrop-blur-md flex flex-col z-50">
       {/* Brand Logo */}
       <div className="h-16 px-6 border-b border-slate-900/60 flex items-center gap-3">
-        <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
+        <div className="p-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg">
           <GraduationCap className="h-5 w-5" />
         </div>
-        <span className="font-extrabold text-xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+        <span className="font-extrabold text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
           SOAI
         </span>
       </div>

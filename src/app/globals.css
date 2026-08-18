@@ -176,3 +176,24 @@ body::before {
 ::-webkit-scrollbar-thumb:hover {
   background: #2563eb;
 }
+
+/* Transições Globais para Elementos Interativos */
+a, button, select, input, textarea, .glass-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Ajuste fino de animação de fade-in no carregamento das páginas */
+.animate-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

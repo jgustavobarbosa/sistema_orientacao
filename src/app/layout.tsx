@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
       style={{ colorScheme: "dark" }}
     >
-      <body className="min-h-full flex flex-col bg-slate-950 text-slate-50 antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
+      <body className="min-h-full flex flex-col text-slate-50 antialiased selection:bg-blue-500/30 selection:text-blue-200">
         <Providers>{children}</Providers>
       </body>
     </html>
