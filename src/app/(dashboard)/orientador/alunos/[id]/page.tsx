@@ -17,10 +17,23 @@ import {
   ChevronRight,
   AlertCircle,
   Edit3,
-  BookOpen
+  BookOpen,
+  Trophy,
+  Activity,
+  AlertTriangle,
+  HelpCircle
 } from 'lucide-react';
 import Link from 'next/link';
-import { criarMarcoPersonalizado, alternarMarcoStatus, deletarMarco, editarProjeto, agendarReuniao, reagendarReuniao, agendarReuniaoLivre } from '@/app/actions';
+import { 
+  criarMarcoPersonalizado, 
+  alternarMarcoStatus, 
+  deletarMarco, 
+  editarProjeto, 
+  agendarReuniao, 
+  reagendarReuniao, 
+  agendarReuniaoLivre,
+  decidirStageGate
+} from '@/app/actions';
 import { CountdownTimer } from '@/components/countdown-timer';
 
 interface AlunoPageProps {
@@ -58,12 +71,41 @@ export default async function DetalhesAlunoPage({ params }: AlunoPageProps) {
         include: { parecerLLM: true },
         orderBy: { createdAt: 'desc' },
       },
+      secoesTexto: {
+        orderBy: { ordem: 'asc' }
+      }
     },
+  });
+
+  if (!projeto) {
+    redirect('/orientador');
+  }
+
+  // Buscar as etapas do projeto do aluno instanciadas
+  const etapasProjeto = await prisma.etapaProjeto.findMany({
+    where: { projetoId: projeto.id },
+    include: {
+      secoes: {
+        orderBy: { ordem: 'asc' }
+      }
+    },
+    orderBy: { ordem: 'asc' }
   });
 
   const hoje = new Date();
 
-  // Buscar disponibilidades do orientador logado
+  // Calcular Risco de atraso do projeto
+  const marcosAtrasados = projeto.marcos.filter(m => m.status !== StatusMarco.CONCLUIDO && new Date(m.dataPrevista) < hoje);
+  const nivelRisco = marcosAtrasados.length > 0 ? 'ALTO' : 'BAIXO';
+
+  // Calcular prontidão para defesa (% de seções obrigatórias aprovadas)
+  const secoesObrigatorias = projeto.secoesTexto.filter(s => s.obrigatoria);
+  const secoesAprovadas = secoesObrigatorias.filter(s => s.status === 'APROVADO');
+  const prontidaoDefesa = secoesObrigatorias.length > 0 
+    ? Math.round((secoesAprovadas.length / secoesObrigatorias.length) * 100)
+    : 0;
+
+  // Buscar disponibilidades do orientador logado para agendamentos
   const disponibilidades = await prisma.disponibilidadeOrientador.findMany({
     where: { orientadorId: session.user.id },
     orderBy: [
@@ -111,579 +153,293 @@ export default async function DetalhesAlunoPage({ params }: AlunoPageProps) {
         Voltar ao Painel
       </Link>
 
-      {/* Identificação do Aluno */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-900/60 pb-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
+      {/* Identificação Principal do Aluno / Eixo Duplo */}
+      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 border-b border-slate-900/60 pb-6">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-100">{aluno.nome}</h1>
-            <span className="text-xs font-semibold px-2.5 py-1 bg-slate-800 text-slate-400 rounded-full">
-              {aluno.ativo ? 'Autorizado' : 'Suspenso'}
+            <span className="text-xs font-bold px-2.5 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-md">
+              {projeto.modalidade}
+            </span>
+            <span className="text-xs font-bold px-2.5 py-0.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-md">
+              {projeto.tipoProduto}
             </span>
           </div>
-          <p className="text-slate-400 text-sm">{aluno.email}</p>
+          <p className="text-xs text-slate-400 font-mono italic">
+            Projeto: &ldquo;{projeto.titulo}&rdquo;
+          </p>
         </div>
 
-        {projeto && (
-          <div className="flex items-center gap-4">
-            {projeto.prazoDefesa && (
-              <CountdownTimer prazoDefesa={projeto.prazoDefesa} />
-            )}
-
-            <div className="flex gap-3">
-              <Link
-                href={`/orientador/alunos/${alunoId}/biblioteca`}
-                className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-indigo-400 hover:text-indigo-350 border border-slate-800 font-semibold text-sm rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                <BookOpen className="h-4 w-4" />
-                Biblioteca
-              </Link>
-
-              <Link
-                href={`/orientador/alunos/${alunoId}/redacao`}
-                className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-indigo-400 hover:text-indigo-350 border border-slate-800 font-semibold text-sm rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                <FileText className="h-4 w-4" />
-                Revisar Capítulos
-              </Link>
-
-              <Link
-                href={`/orientador/reunioes/nova?projetoId=${projeto.id}`}
-                className="py-2.5 px-4 bg-indigo-650 hover:bg-indigo-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-md shadow-indigo-600/10 cursor-pointer"
-              >
-                Registrar Encontro (Ata)
-              </Link>
+        {/* Métricas e Prontidão */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="glass px-4 py-2.5 rounded-xl border border-slate-900 flex items-center gap-2.5">
+            <Activity className="h-4 w-4 text-blue-400" />
+            <div>
+              <span className="text-[9px] text-slate-500 block uppercase font-bold">Risco de Atraso</span>
+              <span className={`text-xs font-bold ${nivelRisco === 'ALTO' ? 'text-amber-400' : 'text-emerald-400'}`}>{nivelRisco}</span>
             </div>
           </div>
-        )}
+
+          <div className="glass px-4 py-2.5 rounded-xl border border-slate-900 flex items-center gap-2.5">
+            <Trophy className="h-4 w-4 text-indigo-400" />
+            <div>
+              <span className="text-[9px] text-slate-500 block uppercase font-bold">Prontidão para Defesa</span>
+              <span className="text-xs font-bold text-slate-200">{prontidaoDefesa}% aprovado</span>
+            </div>
+          </div>
+
+          {projeto.prazoDefesa && (
+            <CountdownTimer prazoDefesa={projeto.prazoDefesa} />
+          )}
+
+          <div className="flex gap-2">
+            <Link
+              href={`/orientador/alunos/${alunoId}/biblioteca`}
+              className="py-2.5 px-3 bg-slate-900 border border-slate-800 hover:bg-slate-850 text-indigo-400 text-xs font-bold rounded-xl transition-all cursor-pointer"
+            >
+              Biblioteca
+            </Link>
+
+            <Link
+              href={`/orientador/alunos/${alunoId}/redacao`}
+              className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+            >
+              Revisar Capítulos
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {projeto && (
-        <details className="glass p-6 rounded-2xl border border-slate-900/60 group">
-          <summary className="list-none flex items-center justify-between cursor-pointer outline-none select-none">
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-md">
-                {projeto.nivel} | {projeto.programa || 'Geral'}
-              </span>
-              <h2 className="text-xl font-bold text-slate-200 mt-1 line-clamp-1">{projeto.titulo}</h2>
-              {projeto.perguntaPesquisa && (
-                <p className="text-xs italic text-slate-400 font-mono mt-1">
-                  &ldquo;{projeto.perguntaPesquisa}&rdquo;
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              {projeto.prazoDefesa && (
-                <span className="text-xs text-slate-500 hidden md:flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Defesa: {new Date(projeto.prazoDefesa).toLocaleDateString('pt-BR')}
-                </span>
-              )}
-              <span className="text-xs font-bold px-3 py-1.5 bg-slate-900 border border-slate-800 text-indigo-400 rounded-xl group-open:hidden flex items-center gap-1.5 hover:text-slate-200 transition-colors">
-                <Edit3 className="h-3.5 w-3.5" />
-                Editar Projeto
-              </span>
-              <span className="text-xs font-bold px-3 py-1.5 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl hidden group-open:inline-block transition-colors">
-                Fechar Edição
-              </span>
-            </div>
-          </summary>
-
-          <form action={editarProjeto} className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6 pt-6 border-t border-slate-900/60 animate-in slide-in-from-top-3 duration-200">
-            <input type="hidden" name="projetoId" value={projeto.id} />
-            <input type="hidden" name="orientandoId" value={aluno.id} />
-
-            <div className="space-y-1.5 md:col-span-2">
-              <label className="text-xs font-semibold text-slate-400 block">Título do Projeto</label>
-              <input
-                type="text"
-                name="titulo"
-                defaultValue={projeto.titulo}
-                required
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none"
-              />
-            </div>
-
-            <div className="space-y-1.5 md:col-span-2">
-              <label className="text-xs font-semibold text-slate-400 block">Pergunta de Pesquisa Vigente</label>
-              <textarea
-                name="perguntaPesquisa"
-                defaultValue={projeto.perguntaPesquisa || ''}
-                rows={2}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none resize-none"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 block">Nível do Projeto</label>
-              <select
-                name="nivel"
-                defaultValue={projeto.nivel}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none"
-              >
-                <option value={NivelProjeto.IC}>Iniciação Científica (IC)</option>
-                <option value={NivelProjeto.TCC}>Trabalho de Conclusão (TCC)</option>
-                <option value={NivelProjeto.MESTRADO}>Mestrado</option>
-                <option value={NivelProjeto.DOUTORADO}>Doutorado</option>
-                <option value={NivelProjeto.POS_DOC}>Pós-Doutorado (Pós-Doc)</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 block">Programa Acadêmico</label>
-              <input
-                type="text"
-                name="programa"
-                defaultValue={projeto.programa || ''}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 block">Prazo Final / Data Limite de Defesa</label>
-              <input
-                type="date"
-                name="prazoDefesa"
-                defaultValue={projeto.prazoDefesa ? new Date(projeto.prazoDefesa).toISOString().substring(0, 10) : ''}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none"
-              />
-            </div>
-
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="w-full py-2.5 px-4 bg-indigo-650 hover:bg-indigo-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-md shadow-indigo-600/10 cursor-pointer"
-              >
-                Salvar Alterações do Projeto
-              </button>
-            </div>
-          </form>
-        </details>
-      )}
-
-      {!projeto ? (
-        <div className="glass p-12 text-center rounded-2xl border border-slate-900/60 flex flex-col items-center justify-center space-y-4">
-          <GraduationCap className="h-12 w-12 text-slate-600" />
+      {projeto.etapaAtual === 'E0_ACOLHIMENTO' ? (
+        <div className="glass p-12 text-center rounded-3xl border border-slate-900/60 max-w-xl mx-auto space-y-4">
+          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto animate-pulse" />
           <div className="space-y-1">
-            <p className="font-semibold text-slate-300">Nenhum projeto vinculado a este orientando.</p>
-            <p className="text-xs text-slate-500 max-w-sm">
-              Volte ao Painel de Orientação e crie um projeto de pesquisa vinculando este aluno.
+            <h3 className="font-bold text-slate-200 text-lg">Aguardando Onboarding</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              O aluno orientando ainda não completou a **Ficha Inicial de Onboarding** (Etapa E0). 
+              Assim que o estudante preencher a ficha e o texto de diagnóstico, a trilha científica do modelo acadêmico correspondente será instanciada e liberada automaticamente para você.
             </p>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Timeline de Marcos */}
+          
+          {/* Timeline de Etapas e Seções (Esquerda) */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-200">Cronograma de Marcos</h2>
-            </div>
+            <h2 className="text-xl font-bold text-slate-200">Trilha Metodológica do Modelo</h2>
 
-            <div className="glass p-6 rounded-2xl border border-slate-900/60 relative space-y-6">
-              {projeto.marcos.length === 0 ? (
-                <p className="text-sm text-slate-500 py-4 text-center">Nenhum marco definido para este projeto.</p>
-              ) : (
-                <div className="relative border-l border-slate-800 ml-4 space-y-8">
-                  {projeto.marcos.map((marco) => {
-                    const dataPrevista = new Date(marco.dataPrevista);
-                    const isAtrasado = marco.status !== StatusMarco.CONCLUIDO && dataPrevista < hoje;
-                    const isConcluido = marco.status === StatusMarco.CONCLUIDO;
+            <div className="space-y-4">
+              {etapasProjeto.map((e) => {
+                const isAprovado = e.statusGate === 'APROVADO';
+                const isLiberado = e.statusGate === 'LIBERADO';
+                const isBloqueado = e.statusGate === 'BLOQUEADO';
 
-                    return (
-                      <div key={marco.id} className="relative pl-8 group">
-                        {/* Ponto da timeline */}
-                        <span className={`absolute left-0 top-1.5 -translate-x-1/2 w-4.5 h-4.5 rounded-full border-4 ${
-                          isConcluido
-                            ? 'bg-emerald-500 border-slate-950'
-                            : isAtrasado
-                            ? 'bg-amber-500 border-slate-950'
-                            : 'bg-slate-700 border-slate-950'
-                        }`} />
+                // Verificar se todas as seções obrigatórias estão aprovadas
+                const secoesEtapa = e.secoes;
+                const obrigatorias = secoesEtapa.filter(s => s.obrigatoria);
+                const aprovadas = obrigatorias.filter(s => s.status === 'APROVADO');
+                const gatePronto = obrigatorias.length > 0 && aprovadas.length === obrigatorias.length;
 
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                return (
+                  <div 
+                    key={e.id} 
+                    className={`glass p-5 rounded-2xl border transition-all duration-300 ${
+                      isAprovado 
+                        ? 'border-emerald-500/20 bg-emerald-950/5' 
+                        : isLiberado 
+                        ? 'border-indigo-500/20 bg-indigo-950/5'
+                        : 'border-slate-900/40 opacity-50'
+                    }`}
+                  >
+                    {/* Cabeçalho da Etapa */}
+                    <div className="flex items-center justify-between gap-4 border-b border-slate-900/60 pb-3 mb-4">
+                      <div>
+                        <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-900 border border-slate-800 text-slate-400 rounded uppercase tracking-wider">
+                          {e.etapa}
+                        </span>
+                        <h3 className="font-bold text-slate-200 text-sm mt-1">{e.titulo}</h3>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isAprovado && (
+                          <span className="text-[10px] font-bold px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg">
+                            Gate Aprovado
+                          </span>
+                        )}
+                        {isLiberado && (
+                          <span className="text-[10px] font-bold px-2 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
+                            Em Desenvolvimento
+                          </span>
+                        )}
+                        {isBloqueado && (
+                          <span className="text-[10px] font-bold px-2 py-1 bg-slate-900 border border-slate-800 text-slate-500 rounded-lg">
+                            Bloqueado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Lista de Seções da Etapa */}
+                    <div className="space-y-3.5">
+                      {e.secoes.map((secao) => (
+                        <div key={secao.id} className="flex items-center justify-between gap-4 text-xs">
                           <div className="space-y-1">
-                            <h3 className={`font-bold text-base ${isConcluido ? 'text-slate-400 line-through' : 'text-slate-200'}`}>
-                              {marco.titulo}
-                            </h3>
-                            {marco.descricao && (
-                              <p className="text-xs text-slate-400">{marco.descricao}</p>
+                            <span className="font-semibold text-slate-300">
+                              {secao.titulo} {secao.obrigatoria ? '*' : ''}
+                            </span>
+                            {secao.criteriosAceite && (
+                              <p className="text-[10px] text-slate-500 leading-normal max-w-md">{secao.criteriosAceite}</p>
                             )}
-                            <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
-                              <span className="text-xs font-medium px-2 py-0.5 bg-slate-900 border border-slate-800 text-slate-400 rounded-md">
-                                {marco.tipo}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3.5 w-3.5 text-slate-600" />
-                                Prazo: {dataPrevista.toLocaleDateString('pt-BR')}
-                              </span>
-                              {isAtrasado && (
-                                <span className="flex items-center gap-1 text-amber-500 font-semibold">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  Atrasado
-                                </span>
-                              )}
-                              {isConcluido && marco.dataConclusao && (
-                                <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                                  <CheckCircle2 className="h-3.5 w-3.5" />
-                                  Concluído em: {new Date(marco.dataConclusao).toLocaleDateString('pt-BR')}
-                                </span>
-                              )}
-                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            {/* Toggle de Status */}
-                            <form action={alternarMarcoStatus.bind(null, marco.id, aluno.id, marco.status)}>
-                              <button
-                                type="submit"
-                                className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                                  isConcluido
-                                    ? 'bg-slate-900 text-slate-500 border-slate-800 hover:bg-slate-850'
-                                    : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
-                                }`}
-                              >
-                                {isConcluido ? 'Reabrir' : 'Concluir'}
-                              </button>
-                            </form>
+                          <div className="flex items-center gap-3">
+                            {secao.status === 'APROVADO' && (
+                              <span className="text-[10px] text-emerald-400 font-bold">Aprovado</span>
+                            )}
+                            {secao.status === 'REVISAR' && (
+                              <span className="text-[10px] text-red-400 font-bold">Revisar</span>
+                            )}
+                            {secao.status === 'PENDENTE' && (
+                              <span className="text-[10px] text-amber-400 font-bold animate-pulse">Revisão Pendente</span>
+                            )}
 
-                            {/* Deletar Marco */}
-                            <form action={deletarMarco.bind(null, marco.id, aluno.id)}>
-                              <button
-                                type="submit"
-                                className="p-1 text-slate-500 hover:text-red-400 border border-transparent hover:border-slate-800 hover:bg-slate-900/60 rounded-md transition-all cursor-pointer"
-                                title="Excluir marco"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </form>
+                            <Link 
+                              href={`/orientador/alunos/${alunoId}/redacao`} 
+                              className="text-[10px] text-indigo-400 hover:underline font-bold"
+                            >
+                              Revisar
+                            </Link>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                      ))}
+                    </div>
 
-            {/* Documentos Enviados e Parecer LLM */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-200">Documentos e Manuscritos</h2>
-              <div className="glass p-6 rounded-2xl border border-slate-900/60 space-y-4">
-                {projeto.documentos.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-2 text-center">Nenhum documento anexado ainda.</p>
-                ) : (
-                  <div className="divide-y divide-slate-900/60">
-                    {projeto.documentos.map((doc) => (
-                      <div key={doc.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-900 border border-slate-800 text-indigo-400 rounded-md">
-                              {doc.categoria}
-                            </span>
-                            <span className="text-xs text-slate-500">v{doc.versao}</span>
-                          </div>
-                          <h4 className="font-bold text-slate-200 flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-slate-400" />
-                            {doc.titulo}
-                          </h4>
-                          <p className="text-[10px] text-slate-500">
-                            Enviado em: {new Date(doc.createdAt).toLocaleDateString('pt-BR')}
+                    {/* Ação de Decisão do Gate (apenas se liberado e não aprovado ainda) */}
+                    {isLiberado && !isAprovado && (
+                      <div className="mt-5 pt-4 border-t border-slate-900/60 space-y-3">
+                        <div className="flex items-start gap-2.5 p-3 bg-indigo-950/15 border border-indigo-900/20 rounded-xl text-[10px] text-slate-400 leading-normal">
+                          <HelpCircle className="h-4 w-4 shrink-0 text-indigo-400" />
+                          <p>
+                            Para vencer o gate científico e avançar para a próxima fase, certifique-se de que todas as seções obrigatórias (*) estão avaliadas com status Aprovado e nota da Rubrica superior a 2.
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                          {doc.parecerLLM ? (
-                            <Link
-                              href={`/orientador/reunioes/${doc.id}/parecer`} // rota placeholder de parecer
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 font-semibold text-xs rounded-lg transition-all cursor-pointer"
-                            >
-                              <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-                              Ver Parecer LLM
-                            </Link>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-900 text-slate-500 border border-slate-800 rounded-lg text-xs">
-                              Sem Parecer
-                            </span>
-                          )}
-                        </div>
+                        <form 
+                          onSubmit={async (event) => {
+                            event.preventDefault();
+                            const form = event.currentTarget;
+                            const note = new FormData(form).get('parecerGate') as string;
+                            try {
+                              await decidirStageGate(e.id, 'APROVADO', note);
+                              window.location.reload();
+                            } catch (err: any) {
+                              alert(err.message || 'Erro ao aprovar o gate da etapa.');
+                            }
+                          }}
+                          className="flex flex-col md:flex-row gap-3"
+                        >
+                          <input 
+                            type="text" 
+                            name="parecerGate"
+                            required
+                            placeholder="Adicione um parecer descritivo do gate científico..."
+                            className="flex-1 px-3 py-2 bg-slate-950/50 border border-slate-900 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none"
+                          />
+                          <button 
+                            type="submit"
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl cursor-pointer whitespace-nowrap transition-colors"
+                          >
+                            Fechar Gate e Avançar
+                          </button>
+                        </form>
                       </div>
-                    ))}
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Adicionar Marco Lateral & Histórico de Reuniões */}
+          {/* Painel do Escopo e Resumo do Plano (Direita) */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Adicionar Marco */}
-            <div className="glass p-6 rounded-2xl border border-slate-900/60 flex flex-col space-y-4">
-              <div className="flex items-center gap-3 border-b border-slate-900/60 pb-4 mb-2">
-                <PlusCircle className="h-5 w-5 text-indigo-400" />
-                <h3 className="font-bold text-slate-200">Novo Marco</h3>
+            <h2 className="text-xl font-bold text-slate-200">Resumo do Plano (Ficha)</h2>
+
+            <div className="glass p-5 rounded-2xl border border-slate-900/60 space-y-4 text-xs leading-relaxed">
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Tema do Trabalho</span>
+                <p className="text-slate-350 mt-0.5">{projeto.temaFrase || 'A definir'}</p>
               </div>
 
-              <form action={criarMarcoPersonalizado} className="space-y-4">
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Problema Científico</span>
+                <p className="text-slate-350 mt-0.5">{projeto.problemaPercebido || 'A definir'}</p>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Pergunta Central</span>
+                <p className="text-slate-350 mt-0.5">{projeto.perguntaPesquisa || 'A definir'}</p>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Objetivo Geral</span>
+                <p className="text-slate-350 mt-0.5">{projeto.objetivoGeral || 'A definir'}</p>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Público ou Contexto</span>
+                <p className="text-slate-350 mt-0.5">{projeto.publicoContexto || 'A definir'}</p>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Acesso a Campo & Dados</span>
+                <p className="text-slate-350 mt-0.5">{projeto.acessoCampo || 'A confirmar'}</p>
+              </div>
+
+              <div className="pt-2.5 border-t border-slate-900/60">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Normas de Defesa</span>
+                <p className="text-slate-350 mt-0.5 truncate">{projeto.normasEntrega || 'Regulamento ABNT geral'}</p>
+              </div>
+            </div>
+
+            {/* Agendamentos Rápidos de Reunião */}
+            <div className="glass p-5 rounded-2xl border border-slate-900/60 space-y-4">
+              <h3 className="font-bold text-slate-200 text-sm">Próximos Encontros</h3>
+              
+              <form action={agendarReuniaoLivre.bind(null, projeto.id)} className="space-y-3">
                 <input type="hidden" name="projetoId" value={projeto.id} />
-                <input type="hidden" name="orientandoId" value={aluno.id} />
-
-                <div className="space-y-1.5">
-                  <label htmlFor="titulo" className="text-xs font-semibold text-slate-400">
-                    Título do Marco
-                  </label>
-                  <input
-                    type="text"
-                    id="titulo"
-                    name="titulo"
-                    required
-                    placeholder="Ex: Escrita do Capítulo 1"
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 rounded-xl text-slate-100 text-sm placeholder-slate-600 transition-all outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="tipo" className="text-xs font-semibold text-slate-400">
-                    Tipo do Marco
-                  </label>
-                  <select
-                    id="tipo"
-                    name="tipo"
-                    required
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 rounded-xl text-slate-100 text-sm transition-all outline-none"
+                
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-slate-500 uppercase">Escolha um horário vago:</label>
+                  <select 
+                    name="slotId" 
+                    required 
+                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none"
                   >
-                    <option value={TipoMarco.CAPITULO}>Capítulo</option>
-                    <option value={TipoMarco.REVISAO}>Revisão</option>
-                    <option value={TipoMarco.APRESENTACAO}>Apresentação</option>
-                    <option value={TipoMarco.CHECKLIST}>Checklist</option>
-                    <option value={TipoMarco.QUALIFICACAO}>Qualificação</option>
-                    <option value={TipoMarco.DEFESA}>Defesa</option>
-                    <option value={TipoMarco.SUBMISSAO}>Submissão</option>
-                    <option value={TipoMarco.OUTRO}>Outro</option>
+                    <option value="">Selecione...</option>
+                    {slotsCombinados.map(slot => (
+                      <option key={slot.id} value={`${slot.dataIso}_${slot.slotId}`}>{slot.label}</option>
+                    ))}
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label htmlFor="descricao" className="text-xs font-semibold text-slate-400">
-                    Descrição/Detalhes
-                  </label>
-                  <textarea
-                    id="descricao"
-                    name="descricao"
-                    placeholder="O que deve ser entregue..."
-                    rows={2}
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 rounded-xl text-slate-100 text-sm placeholder-slate-600 transition-all outline-none resize-none"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="dataPrevista" className="text-xs font-semibold text-slate-400">
-                    Prazo Limite
-                  </label>
-                  <input
-                    type="date"
-                    id="dataPrevista"
-                    name="dataPrevista"
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-slate-500 uppercase">Pauta / Objetivo:</label>
+                  <input 
+                    type="text" 
+                    name="objetivo"
                     required
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 rounded-xl text-slate-100 text-sm transition-all outline-none"
+                    placeholder="ex: Discussão do referencial teórico"
+                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none placeholder:text-slate-800"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-md shadow-indigo-600/10 cursor-pointer"
+                <button 
+                  type="submit" 
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl cursor-pointer transition-colors"
                 >
-                  Adicionar Marco
+                  Agendar Orientação
                 </button>
               </form>
-            </div>
-
-            {/* Agendar Reunião com o Aluno */}
-            <div className="glass p-6 rounded-2xl border border-slate-900/60 flex flex-col space-y-4">
-              <div className="flex items-center gap-3 border-b border-slate-900/60 pb-3 text-indigo-400">
-                <Calendar className="h-5 w-5 shrink-0" />
-                <h3 className="font-bold text-slate-200">Agendar Novo Encontro</h3>
-              </div>
-
-              <details className="group border-b border-slate-900/40 pb-3" open={slotsCombinados.length > 0}>
-                <summary className="text-xs font-bold text-slate-450 hover:text-slate-200 cursor-pointer list-none flex items-center justify-between select-none outline-none">
-                  <span>Usar Disponibilidade Semanal</span>
-                  <span className="text-[10px] text-indigo-400 group-open:hidden">Abrir</span>
-                  <span className="text-[10px] text-indigo-400 hidden group-open:inline">Fechar</span>
-                </summary>
-                {slotsCombinados.length > 0 ? (
-                  <form action={agendarReuniao.bind(null, alunoId)} className="space-y-3 mt-3">
-                    <div className="space-y-1">
-                      <label htmlFor="horarioCombinado" className="text-[10px] font-semibold text-slate-400">
-                        Selecione o Horário Disponível
-                      </label>
-                      <select
-                        id="horarioCombinado"
-                        name="horarioCombinado"
-                        required
-                        className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none"
-                      >
-                        <option value="">Escolha uma data livre...</option>
-                        {slotsCombinados.map((slot) => (
-                          <option key={slot.id} value={`${slot.dataIso}_${slot.slotId}`}>
-                            {slot.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label htmlFor="objetivoSlot" className="text-[10px] font-semibold text-slate-400">
-                        Objetivo da Reunião
-                      </label>
-                      <textarea
-                        id="objetivoSlot"
-                        name="objetivo"
-                        rows={2}
-                        required
-                        placeholder="Descreva o objetivo do encontro..."
-                        className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none resize-none"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
-                    >
-                      Confirmar Encontro
-                    </button>
-                  </form>
-                ) : (
-                  <p className="text-[10px] text-slate-500 mt-2">Você não possui slots livres configurados para as próximas semanas.</p>
-                )}
-              </details>
-
-              <details className="group pt-1" open={slotsCombinados.length === 0}>
-                <summary className="text-xs font-bold text-slate-400 hover:text-slate-200 cursor-pointer list-none flex items-center justify-between select-none outline-none">
-                  <span>Agendamento Livre (Sem dependência de slots)</span>
-                  <span className="text-[10px] text-indigo-400 group-open:hidden">Abrir</span>
-                  <span className="text-[10px] text-indigo-400 hidden group-open:inline">Fechar</span>
-                </summary>
-                <form action={agendarReuniaoLivre.bind(null, projeto.id)} className="space-y-3 mt-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label htmlFor="dataLivre" className="text-[10px] font-semibold text-slate-400">
-                        Data da Reunião
-                      </label>
-                      <input
-                        type="date"
-                        id="dataLivre"
-                        name="data"
-                        required
-                        className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label htmlFor="horaLivre" className="text-[10px] font-semibold text-slate-400">
-                        Horário de Início
-                      </label>
-                      <input
-                        type="time"
-                        id="horaLivre"
-                        name="hora"
-                        required
-                        className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label htmlFor="objetivoLivre" className="text-[10px] font-semibold text-slate-400">
-                      Objetivo da Reunião
-                    </label>
-                    <textarea
-                      id="objetivoLivre"
-                      name="objetivo"
-                      rows={2}
-                      required
-                      placeholder="Descreva o objetivo do encontro..."
-                      className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none resize-none"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-2 bg-indigo-650 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
-                  >
-                    Confirmar Encontro Livre
-                  </button>
-                </form>
-              </details>
-            </div>
-
-            {/* Histórico de Atas/Reuniões */}
-            <div className="glass p-6 rounded-2xl border border-slate-900/60 flex flex-col space-y-4">
-              <div className="flex items-center gap-3 border-b border-slate-900/60 pb-3">
-                <FileText className="h-5 w-5 text-indigo-400" />
-                <h3 className="font-bold text-slate-200">Reuniões Recentes</h3>
-              </div>
-
-              {projeto.reunioes.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-2">Nenhum encontro registrado ainda.</p>
-              ) : (
-                <div className="space-y-3">
-                  {projeto.reunioes.map((reuniao) => {
-                    const isFutura = new Date(reuniao.dataHoraInicio) >= hoje;
-                    return (
-                      <div
-                        key={reuniao.id}
-                        className="p-3 bg-slate-900/30 border border-slate-900/40 rounded-xl space-y-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <Link
-                            href={`/orientador/reunioes/${reuniao.id}`}
-                            className="space-y-0.5 hover:text-indigo-400 transition-colors animate-all"
-                          >
-                            <div className="text-xs font-bold text-slate-200">
-                              Encontro #{reuniao.numeroEncontro}
-                            </div>
-                            <div className="text-[10px] text-slate-500">
-                              {new Date(reuniao.dataHoraInicio).toLocaleDateString('pt-BR')} às {new Date(reuniao.dataHoraInicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                            {reuniao.objetivo && (
-                              <div className="text-[10px] text-slate-400 italic mt-0.5 max-w-[200px] truncate">
-                                &ldquo;{reuniao.objetivo}&ldquo;
-                              </div>
-                            )}
-                          </Link>
-                          <ChevronRight className="h-4 w-4 text-slate-500" />
-                        </div>
-
-                        {isFutura && slotsCombinados.length > 0 && (
-                          <details className="group border-t border-slate-900/50 pt-2">
-                            <summary className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer list-none flex items-center gap-1 select-none outline-none">
-                              Reagendar Horário
-                            </summary>
-                            <form action={reagendarReuniao.bind(null, reuniao.id)} className="mt-2 space-y-2">
-                              <select
-                                name="horarioCombinado"
-                                required
-                                className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-850 rounded-lg text-[10px] text-slate-250 outline-none"
-                              >
-                                <option value="">Novo horário...</option>
-                                {slotsCombinados.map(slot => (
-                                  <option key={slot.id} value={`${slot.dataIso}_${slot.slotId}`}>
-                                    {slot.label}
-                                  </option>
-                                ))}
-                              </select>
-                              <button
-                                type="submit"
-                                className="w-full py-1 bg-indigo-650 hover:bg-indigo-600 text-white font-bold text-[9px] rounded-lg transition-all cursor-pointer"
-                              >
-                                Alterar Horário
-                              </button>
-                            </form>
-                          </details>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </div>
         </div>

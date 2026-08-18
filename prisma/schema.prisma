@@ -166,6 +166,7 @@ model ProjetoOrientacao {
   documentos        Documento[]
   secoesTexto       SecaoTexto[]
   leiturasIndicadas BibliotecaLeitura[]
+  etapasProjeto     EtapaProjeto[]
 
   @@index([orientadorId])
   @@index([orientandoId])
@@ -306,7 +307,13 @@ model SecaoTexto {
   id                 String            @id @default(uuid()) @db.Uuid
   projetoId          String            @db.Uuid
   projeto            ProjetoOrientacao @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  etapaProjetoId     String?           @db.Uuid
+  etapaProjeto       EtapaProjeto?     @relation(fields: [etapaProjetoId], references: [id], onDelete: Cascade)
   titulo             String            // ex: "Capítulo 1 - Introdução"
+  ordem              Int               @default(0)
+  obrigatoria        Boolean           @default(true)
+  instrucaoPrompt    String?           @db.Text
+  criteriosAceite    String?           @db.Text
   conteudo           String            @db.Text
   status             StatusSecao       @default(PENDENTE)
   correcoes          String?           @db.Text // Sugestões e anotações do professor
@@ -332,8 +339,10 @@ model SecaoTexto {
 
   historicoVersoes   VersaoSecaoTexto[]
   auditoriasIA       AuditoriaIA[]
+  itensRevisao       ItemRevisao[]
 
   @@index([projetoId])
+  @@index([etapaProjetoId])
 }
 
 model VersaoSecaoTexto {
@@ -392,4 +401,72 @@ model AuditoriaIA {
   createdAt     DateTime    @default(now())
 
   @@index([secaoTextoId])
+}
+
+model ModeloCatalogo {
+  id           String               @id @default(uuid()) @db.Uuid
+  codigo       TipoProdutoAcademico @unique
+  nome         String
+  descricao    String?              @db.Text
+  versao       Int                  @default(1)
+  ativo        Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  etapas       EtapaCatalogo[]
+}
+
+model EtapaCatalogo {
+  id           String            @id @default(uuid()) @db.Uuid
+  modeloId     String            @db.Uuid
+  modelo       ModeloCatalogo    @relation(fields: [modeloId], references: [id], onDelete: Cascade)
+  etapa        EtapaOrientacao
+  ordem        Int
+  titulo       String
+  descricao    String?           @db.Text
+
+  secoes       SecaoCatalogo[]
+}
+
+model SecaoCatalogo {
+  id                  String         @id @default(uuid()) @db.Uuid
+  etapaId             String         @db.Uuid
+  etapa               EtapaCatalogo  @relation(fields: [etapaId], references: [id], onDelete: Cascade)
+  titulo              String
+  ordem               Int
+  obrigatoria         Boolean        @default(true)
+  instrucaoPrompt     String?        @db.Text
+  criteriosAceite     String?        @db.Text
+}
+
+model EtapaProjeto {
+  id               String            @id @default(uuid()) @db.Uuid
+  projetoId        String            @db.Uuid
+  projeto          ProjetoOrientacao @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  etapa            EtapaOrientacao
+  titulo           String
+  ordem            Int
+  statusGate       String            @default("BLOQUEADO") // BLOQUEADO, LIBERADO, APROVADO
+  parecerGate      String?           @db.Text
+  dataAprovacao    DateTime?
+
+  secoes           SecaoTexto[]
+
+  @@index([projetoId])
+}
+
+model ItemRevisao {
+  id             String      @id @default(uuid()) @db.Uuid
+  secaoId        String      @db.Uuid
+  secao          SecaoTexto  @relation(fields: [secaoId], references: [id], onDelete: Cascade)
+  localizacao    String      // ex: "Parágrafo 3" ou "Objetivos específicos"
+  criterio       String      @db.Text // ex: "Falta clareza no verbo de ação"
+  acaoRequerida  String      @db.Text // ex: "Substituir analisar por criar..."
+  responsavel    String      @default("ORIENTANDO") // ORIENTANDO, ORIENTADOR
+  prazo          DateTime?
+  status         String      @default("PENDENTE") // PENDENTE, CONCLUIDO, REJEITADO
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([secaoId])
 }

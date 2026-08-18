@@ -5,7 +5,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { PapelUsuario } from '@prisma/client';
 import { FileText, CheckCircle2, AlertCircle, Clock, BookOpen, Send, Download, Sparkles } from 'lucide-react';
-import { submeterSecao } from '@/app/actions';
+import { FormRedacaoAluno } from '@/components/form-redacao-aluno';
+import { GerenciadorItensRevisao } from '@/components/gerenciador-itens-revisao';
 
 export default async function AlunoRedacaoPage() {
   const session = await getServerSession(authOptions);
@@ -32,6 +33,9 @@ export default async function AlunoRedacaoPage() {
       },
       auditoriasIA: {
         orderBy: { createdAt: 'desc' }
+      },
+      itensRevisao: {
+        orderBy: { createdAt: 'asc' }
       }
     },
     orderBy: { updatedAt: 'desc' }
@@ -55,141 +59,96 @@ export default async function AlunoRedacaoPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Formulário de Submissão de Capítulo */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="glass p-6 rounded-2xl border border-slate-900/60 flex flex-col space-y-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
-                <Send className="h-5 w-5" />
-              </div>
-              <h3 className="font-bold text-slate-200">Submeter Capítulo</h3>
-            </div>
-
-            <form action={submeterSecao.bind(null, projeto.id)} className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="titulo" className="text-xs font-semibold text-slate-400">
-                  Estrutura / Título do Capítulo
-                </label>
-                <select
-                  id="titulo"
-                  name="titulo"
-                  required
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none"
-                >
-                  <option value="1. Introdução e Delimitação">1. Introdução e Delimitação</option>
-                  <option value="2. Referencial Teórico">2. Referencial Teórico</option>
-                  <option value="3. Metodologia da Pesquisa">3. Metodologia da Pesquisa</option>
-                  <option value="4. Resultados e Análise">4. Resultados e Análise</option>
-                  <option value="5. Considerações Finais / Dossiê">5. Considerações Finais / Dossiê</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="conteudo" className="text-xs font-semibold text-slate-400">
-                  Conteúdo do Capítulo (Texto Completo)
-                </label>
-                <textarea
-                  id="conteudo"
-                  name="conteudo"
-                  required
-                  rows={10}
-                  placeholder="Escreva ou cole aqui a redação completa desta seção para que o orientador faça as correções..."
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm placeholder-slate-650 outline-none resize-none font-mono leading-relaxed"
-                />
-              </div>
-
-              {/* Protocolo de 4 blocos */}
-              <div className="border-t border-slate-900/40 pt-4 space-y-3.5">
-                <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Protocolo de Submissão</h4>
-                
-                <div className="space-y-1">
-                  <label htmlFor="oQueProduzi" className="text-[10px] text-slate-400 block font-semibold">1. O que produzi nesta versão?</label>
-                  <input
-                    type="text"
-                    id="oQueProduzi"
-                    name="oQueProduzi"
-                    required
-                    placeholder="ex: Redigi os parágrafos sobre delimitação espacial..."
-                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="oQueMudou" className="text-[10px] text-slate-400 block font-semibold">2. O que mudou em relação à versão anterior?</label>
-                  <input
-                    type="text"
-                    id="oQueMudou"
-                    name="oQueMudou"
-                    placeholder="ex: Ajustei a hipótese C baseado no feedback..."
-                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="ondeTenhoDuvida" className="text-[10px] text-slate-400 block font-semibold">3. Onde tenho dúvida ou gargalo?</label>
-                  <input
-                    type="text"
-                    id="ondeTenhoDuvida"
-                    name="ondeTenhoDuvida"
-                    placeholder="ex: Profundidade da revisão sistemática..."
-                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="oQuePrecisoAvancar" className="text-[10px] text-slate-400 block font-semibold">4. O que preciso para avançar?</label>
-                  <input
-                    type="text"
-                    id="oQuePrecisoAvancar"
-                    name="oQuePrecisoAvancar"
-                    placeholder="ex: Feedback metodológico..."
-                    className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-md shadow-indigo-650/10 cursor-pointer"
-              >
-                Enviar para Avaliação
-              </button>
-            </form>
-          </div>
+          <FormRedacaoAluno projetoId={projeto.id} secoes={secoes as any} />
         </div>
 
         {/* Dossiê Consolidado & Histórico */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Dossiê Consolidado de Partes Aprovadas */}
-          <div className="glass p-6 rounded-2xl border border-indigo-500/20 bg-gradient-to-r from-slate-950 via-indigo-950/5 to-slate-950 space-y-4 shadow-lg shadow-indigo-500/5">
-            <div className="flex items-center justify-between border-b border-slate-900/60 pb-3">
-              <div className="flex items-center gap-3">
-                <BookOpen className="h-5 w-5 text-indigo-400" />
-                <h3 className="font-bold text-slate-200">Dossiê Acadêmico Consolidado</h3>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 rounded-md">
-                {secoesAprovadas.length} parte(s) unida(s)
-              </span>
-            </div>
+          {/* Dossiê Acadêmico Consolidado (Manifesto & Trava de Defesa) */}
+          {(() => {
+            const secoesObrigatoriasPendentes = secoes.filter(s => s.obrigatoria && s.status !== 'APROVADO');
+            const prontoDefesa = secoesObrigatoriasPendentes.length === 0;
 
-            {secoesAprovadas.length === 0 ? (
-              <p className="text-xs text-slate-500 text-center py-6">
-                Nenhum capítulo foi aprovado pelo orientador ainda. Os trechos aparecerão unidos aqui conforme forem validados.
-              </p>
-            ) : (
-              <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
-                {secoesAprovadas.map((secao) => (
-                  <details key={secao.id} className="group border border-slate-900/60 bg-slate-950/50 rounded-xl overflow-hidden">
-                    <summary className="px-4 py-3 text-xs font-bold text-slate-250 hover:text-indigo-400 cursor-pointer select-none transition-colors flex items-center justify-between">
-                      <span>{secao.titulo}</span>
-                      <span className="text-[10px] text-emerald-400 font-semibold group-open:hidden">Expandir Conteúdo</span>
-                    </summary>
-                    <div className="px-4 pb-4 pt-2 border-t border-slate-900/50 text-xs text-slate-350 leading-relaxed whitespace-pre-line bg-slate-950/20">
-                      {secao.conteudo}
+            return (
+              <div className="glass p-6 rounded-2xl border border-indigo-500/20 bg-gradient-to-r from-slate-950 via-indigo-950/5 to-slate-950 space-y-5 shadow-lg shadow-indigo-500/5">
+                <div className="flex items-center justify-between border-b border-slate-900/60 pb-3">
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="h-5 w-5 text-indigo-400" />
+                    <h3 className="font-bold text-slate-200">Dossiê Acadêmico Consolidado</h3>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-455 rounded-md">
+                    {secoesAprovadas.length} de {secoes.length} seção(ões) aprovada(s)
+                  </span>
+                </div>
+
+                {/* Trava e Status de Prontidão para Defesa */}
+                {prontoDefesa ? (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-350 rounded-xl text-xs flex items-center gap-2">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-emerald-450 shrink-0 animate-bounce" />
+                    <div>
+                      <p className="font-bold">Dossiê Completo. Pronto para Defesa!</p>
+                      <p className="text-[10px] text-emerald-400/80">Todas as seções obrigatórias foram revisadas e aprovadas pelo orientador.</p>
                     </div>
-                  </details>
-                ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl text-xs flex items-start gap-2.5">
+                    <AlertCircle className="h-4.5 w-4.5 text-red-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold">Dossiê Incompleto para Defesa</p>
+                      <p className="text-[10px] text-red-400/80 mt-0.5">
+                        O avanço para a defesa está bloqueado. Há seções obrigatórias pendentes:
+                      </p>
+                      <ul className="list-disc pl-4 mt-1 text-[10px] space-y-0.5 font-medium text-slate-400">
+                        {secoesObrigatoriasPendentes.map(s => (
+                          <li key={s.id}>{s.titulo} ({s.status})</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* Manifesto de Seções do Dossiê */}
+                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                  {secoes.map((secao) => {
+                    const isAprovado = secao.status === 'APROVADO';
+                    return (
+                      <div 
+                        key={secao.id} 
+                        className={`border rounded-xl overflow-hidden transition-all ${
+                          isAprovado 
+                            ? 'border-indigo-950 bg-slate-950/50' 
+                            : 'border-slate-900 bg-slate-950/15 opacity-60'
+                        }`}
+                      >
+                        <div className="px-4 py-3 text-xs flex items-center justify-between font-bold">
+                          <div className="space-y-0.5">
+                            <span className="text-slate-250">{secao.titulo} {secao.obrigatoria ? '*' : ''}</span>
+                            <span className="text-[9px] text-slate-500 block">
+                              {isAprovado ? `Incluso (versão v${secao.versao})` : 'Ausente/Pendente'}
+                            </span>
+                          </div>
+
+                          <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${
+                            isAprovado 
+                              ? 'bg-emerald-500/15 text-emerald-450' 
+                              : 'bg-slate-900 text-slate-550'
+                          }`}>
+                            {secao.status}
+                          </span>
+                        </div>
+
+                        {isAprovado && (
+                          <div className="px-4 pb-4 pt-2 border-t border-slate-900/60 text-xs text-slate-350 leading-relaxed whitespace-pre-line bg-slate-950/10 font-mono">
+                            {secao.conteudo}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            )}
-          </div>
+            );
+          })()}
 
           {/* Histórico e Correções */}
           <div className="glass rounded-2xl border border-slate-900/60 overflow-hidden flex flex-col">
@@ -283,6 +242,11 @@ export default async function AlunoRedacaoPage() {
                         </p>
                       </div>
                     )}
+
+                    {/* Gerenciador de Ajustes Corretivos */}
+                    <div className="pt-2 border-t border-slate-900/40">
+                      <GerenciadorItensRevisao secaoId={secao.id} itensInicial={secao.itensRevisao as any} somenteLeitura={true} />
+                    </div>
 
                     {/* Histórico de Versões e Réplicas */}
                     {secao.historicoVersoes.length > 0 && (

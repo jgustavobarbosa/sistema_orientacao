@@ -1392,3 +1392,177 @@ export async function executarAuditoriaIA(secaoId: string) {
     redirect(`/orientador/alunos/${orientandoId}/redacao`);
   }
 }
+
+export async function decidirStageGate(
+  etapaProjetoId: string,
+  statusGate: 'APROVADO' | 'LIBERADO',
+  parecerGate: string
+) {
+  try {
+    const { prisma } = await import('@/lib/db');
+
+    const etapa = await prisma.etapaProjeto.findUnique({
+      where: { id: etapaProjetoId },
+      include: {
+        projeto: true,
+        secoes: true
+      }
+    });
+
+    if (!etapa) {
+      throw new Error('Etapa do projeto não encontrada.');
+    }
+
+    const projetoId = etapa.projetoId;
+
+    if (statusGate === 'APROVADO') {
+      // 1. Validar se todas as seções obrigatórias desta etapa foram devidamente aprovadas
+      const secoesObrigatorias = etapa.secoes.filter(s => s.obrigatoria);
+      const naoAprovadas = secoesObrigatorias.filter(s => s.status !== 'APROVADO');
+
+      if (naoAprovadas.length > 0) {
+        throw new Error(
+          `Bloqueio de Gate: Há ${naoAprovadas.length} seção(ões) obrigatória(s) pendente(s) de aprovação nesta etapa.`
+        );
+      }
+
+      // 2. Validar se todas as notas de rubrica de todas as seções desta etapa são >= 2
+      const secoesComNotaBaixa = etapa.secoes.filter(s => {
+        if (s.obrigatoria) {
+          const p = s.notaPertinencia ?? 0;
+          const c = s.notaCoerencia ?? 0;
+          const e = s.notaEvidencia ?? 0;
+          const cl = s.notaClareza ?? 0;
+          const cf = s.notaConformidade ?? 0;
+          return p < 2 || c < 2 || e < 2 || cl < 2 || cf < 2;
+        }
+        return false;
+      });
+
+      if (secoesComNotaBaixa.length > 0) {
+        throw new Error(
+          `Bloqueio de Gate: A seção "${secoesComNotaBaixa[0].titulo}" possui critérios na Rubrica 5D abaixo de 2/3. Ajuste-os antes de fechar o gate.`
+        );
+      }
+
+      // 3. Atualizar a etapa atual para aprovada
+      await prisma.etapaProjeto.update({
+        where: { id: etapa.id },
+        data: {
+          statusGate: 'APROVADO',
+          parecerGate,
+          dataAprovacao: new Date()
+        }
+      });
+
+      // 4. Liberar a próxima etapa do cronograma se houver
+      const proximaEtapa = await prisma.etapaProjeto.findFirst({
+        where: {
+          projetoId: etapa.projetoId,
+          ordem: etapa.ordem + 1
+        }
+      });
+
+      if (proximaEtapa) {
+        await prisma.etapaProjeto.update({
+          where: { id: proximaEtapa.id },
+          data: { statusGate: 'LIBERADO' }
+        });
+
+        // Atualizar etapa vigente do projeto
+        await prisma.projetoOrientacao.update({
+          where: { id: etapa.projetoId },
+          data: { etapaAtual: proximaEtapa.etapa }
+        });
+
+        // Notificar aluno
+        const { criarNotificacao } = await import('@/lib/notifications');
+        await criarNotificacao(
+          etapa.projeto.orientandoId,
+          `Etapa Liberada: ${proximaEtapa.titulo}`,
+          `Parabéns! O gate da etapa anterior foi vencido e o capítulo "${proximaEtapa.titulo}" está liberado.`
+        );
+      } else {
+        // Se não há próxima etapa, significa que o aluno completou a esteira científica (pode ir para pós-defesa)
+        await prisma.projetoOrientacao.update({
+          where: { id: etapa.projetoId },
+          data: { etapaAtual: 'E8_POS_DEFESA' }
+        });
+      }
+    } else {
+      // Registrar liberação simples da etapa
+      await prisma.etapaProjeto.update({
+        where: { id: etapa.id },
+        data: { statusGate: 'LIBERADO' }
+      });
+    }
+
+    revalidatePath(`/orientador/alunos/${etapa.projeto.orientandoId}`);
+    revalidatePath('/aluno');
+  } catch (error: any) {
+    console.error('Erro ao decidir gate da etapa:', error);
+    throw error;
+  }
+}
+
+export async function adicionarItemRevisao(
+  secaoId: string,
+  localizacao: string,
+  criterio: string,
+  acaoRequerida: string
+) {
+  try {
+    const { prisma } = await import('@/lib/db');
+
+    const secao = await prisma.secaoTexto.findUnique({
+      where: { id: secaoId },
+      include: { projeto: true }
+    });
+
+    if (!secao) {
+      throw new Error('Seção não encontrada.');
+    }
+
+    const item = await prisma.itemRevisao.create({
+      data: {
+        secaoId,
+        localizacao,
+        criterio,
+        acaoRequerida,
+        responsavel: 'ORIENTANDO',
+        status: 'PENDENTE'
+      }
+    });
+
+    revalidatePath(`/orientador/alunos/${secao.projeto.orientandoId}/redacao`);
+    revalidatePath('/aluno/redacao');
+
+    return item;
+  } catch (error) {
+    console.error('Erro ao criar item de revisão:', error);
+    throw error;
+  }
+}
+
+export async function alternarStatusItemRevisao(itemId: string, statusAtual: string) {
+  try {
+    const { prisma } = await import('@/lib/db');
+
+    const novoStatus = statusAtual === 'CONCLUIDO' ? 'PENDENTE' : 'CONCLUIDO';
+
+    const item = await prisma.itemRevisao.update({
+      where: { id: itemId },
+      data: { status: novoStatus },
+      include: { secao: { include: { projeto: true } } }
+    });
+
+    revalidatePath(`/orientador/alunos/${item.secao.projeto.orientandoId}/redacao`);
+    revalidatePath('/aluno/redacao');
+
+    return item;
+  } catch (error) {
+    console.error('Erro ao alternar status do item de revisão:', error);
+    throw error;
+  }
+}
+

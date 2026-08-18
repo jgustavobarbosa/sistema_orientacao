@@ -24,6 +24,10 @@ export default async function OrientadorDashboard() {
     redirect('/login');
   }
 
+  // Seeder automático do Catálogo de Modelos do SOIA
+  const { seedCatalog } = await import('@/lib/seed-catalog');
+  await seedCatalog();
+
   // Obter orientador do BD
   const orientadorDb = await prisma.usuario.findUnique({
     where: { email: session.user.email!.toLowerCase() },

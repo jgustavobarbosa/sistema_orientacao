@@ -7,6 +7,7 @@ import { PapelUsuario } from '@prisma/client';
 import { FileText, CheckCircle2, AlertCircle, Clock, ArrowLeft, Send, Sparkles, History } from 'lucide-react';
 import Link from 'next/link';
 import { revisarSecao, submeterReplicaOrientador, executarAuditoriaIA } from '@/app/actions';
+import { GerenciadorItensRevisao } from '@/components/gerenciador-itens-revisao';
 
 interface RevisarRedacaoProps {
   params: Promise<{ id: string }>;
@@ -42,6 +43,9 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
       },
       auditoriasIA: {
         orderBy: { createdAt: 'desc' }
+      },
+      itensRevisao: {
+        orderBy: { createdAt: 'asc' }
       }
     },
     orderBy: { updatedAt: 'desc' }
@@ -208,6 +212,9 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
                       <p className="text-[10px] text-slate-550 italic">Nenhuma auditoria de escrita por IA disparada para este capítulo.</p>
                     )}
                   </div>
+
+                  {/* Gerenciador de Itens de Revisão Granulares */}
+                  <GerenciadorItensRevisao secaoId={secao.id} itensInicial={secao.itensRevisao as any} />
                 </div>
 
                 {/* Painel de Correções, Réplicas e Status */}
