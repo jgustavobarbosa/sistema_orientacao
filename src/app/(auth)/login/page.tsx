@@ -50,7 +50,7 @@ function LoginContent() {
     <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
       
       {/* Coluna Esquerda: Apresentação / Landing Page */}
-      <div className="lg:col-span-7 space-y-8 text-left animate-in slide-in-from-left duration-500">
+      <div className="lg:col-span-7 space-y-8 text-left animate-slide-left">
         <div className="space-y-5">
           {/* Logo Limpa em Branco no canto superior esquerdo com nome aberto */}
           <div className="flex items-center gap-3">
@@ -58,7 +58,7 @@ function LoginContent() {
               <GraduationCap className="h-6 w-6 font-bold" />
             </div>
             <div>
-              <span className="text-2xl font-black tracking-tight text-white leading-none block">SOAI</span>
+              <span className="text-2xl font-black tracking-tight text-white leading-none block">SOIA</span>
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block leading-none mt-1">
                 Sistema de Orientação Inteligente Avançado
               </span>
@@ -70,7 +70,7 @@ function LoginContent() {
           </h1>
           
           <p className="text-sm text-slate-400 leading-relaxed max-w-xl">
-            O SOAI centraliza a comunicação entre orientador e orientando, unificando cronogramas, redação científica, atas estruturadas e auditoria autônoma de escrita por inteligência artificial.
+            O SOIA centraliza a comunicação entre orientador e orientando, unificando cronogramas, redação científica, atas estruturadas e auditoria autônoma de escrita por inteligência artificial.
           </p>
         </div>
 
@@ -127,7 +127,7 @@ function LoginContent() {
       </div>
 
       {/* Coluna Direita: Box de Acesso / Login */}
-      <div className="lg:col-span-5 flex justify-center animate-in slide-in-from-right duration-500">
+      <div className="lg:col-span-5 flex justify-center animate-slide-right">
         <div className="w-full max-w-md px-6 py-10 glass rounded-3xl shadow-2xl relative">
           
           <div className="flex flex-col items-center text-center space-y-4 mb-6">
@@ -139,7 +139,7 @@ function LoginContent() {
                 Acessar Plataforma
               </h2>
               <p className="text-[10px] text-slate-400 mt-1">
-                SOAI — Sistema de Orientação Inteligente Avançado
+                SOIA — Sistema de Orientação Inteligente Avançado
               </p>
             </div>
           </div>

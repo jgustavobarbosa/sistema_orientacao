@@ -43,7 +43,7 @@ export function AppSidebar({ session }: { session: Session }) {
           <GraduationCap className="h-5 w-5" />
         </div>
         <span className="font-extrabold text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
-          SOAI
+          SOIA
         </span>
       </div>
 

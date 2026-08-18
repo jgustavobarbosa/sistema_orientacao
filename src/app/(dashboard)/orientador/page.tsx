@@ -75,6 +75,14 @@ export default async function OrientadorDashboard() {
       reunioes: {
         orderBy: { dataHoraInicio: 'desc' },
       },
+      secoesTexto: {
+        include: {
+          auditoriasIA: {
+            orderBy: { createdAt: 'desc' },
+            take: 1
+          }
+        }
+      }
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -98,6 +106,22 @@ export default async function OrientadorDashboard() {
     orderBy: { nome: 'asc' },
   });
 
+  // 4. Estatísticas de Mapeamento de Atividades e Redação para Dashboard Geral style Northstar
+  const totalSecoes = projetosAtivos.reduce((acc, p) => acc + p.secoesTexto.length, 0);
+  const secoesAprovadas = projetosAtivos.reduce((acc, p) => acc + p.secoesTexto.filter(s => s.status === 'APROVADO').length, 0);
+  const secoesPendenteRevisao = projetosAtivos.reduce((acc, p) => acc + p.secoesTexto.filter(s => s.status === 'PENDENTE').length, 0);
+
+  const todasAuditorias = projetosAtivos.flatMap(p => p.secoesTexto.flatMap(s => s.auditoriasIA));
+  const scoreIAMedio = todasAuditorias.length > 0
+    ? Math.round(todasAuditorias.reduce((acc, curr) => acc + curr.pontuacao, 0) / todasAuditorias.length)
+    : 0;
+
+  const todosMarcos = projetosAtivos.flatMap(p => p.marcos);
+  const totalMarcos = todosMarcos.length;
+  const marcosConcluidos = todosMarcos.filter(m => m.status === 'CONCLUIDO').length;
+  const marcosAtrasados = todosMarcos.filter(m => m.status === 'A_FAZER' && new Date(m.dataPrevista) < hoje).length;
+  const marcosEmDia = totalMarcos - marcosAtrasados;
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Cabeçalho */}
@@ -105,40 +129,104 @@ export default async function OrientadorDashboard() {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Painel de Orientação</h1>
           <p className="text-slate-400 mt-1">
-            Visão geral de seus orientandos, cronogramas e entregas pendentes.
+            Métricas ativas de progresso, marcos de projetos, escrita por IA e revisões de orientandos.
           </p>
         </div>
       </div>
 
-      {/* Cards de Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass p-6 rounded-2xl border border-slate-900/60 flex items-center justify-between">
-          <div className="space-y-2">
-            <span className="text-sm font-semibold text-slate-400">Total de Alunos</span>
-            <h3 className="text-3xl font-bold">{totalAlunos}</h3>
+      {/* Dashboard de Estatísticas Ativas Gerais */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* KPI 1: Alunos e Saúde */}
+        <div className="glass p-6 rounded-2xl border border-slate-900/60 space-y-4">
+          <span className="text-[10px] font-bold px-2.5 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-md uppercase tracking-wider">
+            Orientandos
+          </span>
+          <div className="flex justify-between items-baseline">
+            <h3 className="text-4xl font-extrabold text-slate-100">{projetosAtivos.length}</h3>
+            <p className="text-xs text-slate-500 font-semibold">alunos ativos</p>
           </div>
-          <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
-            <Users className="h-6 w-6" />
+          <div className="space-y-1.5 pt-2 border-t border-slate-900/40">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-450">Em dia:</span>
+              <span className="font-semibold text-emerald-450">{countEmAndamento}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-450">Com atraso:</span>
+              <span className="font-semibold text-red-450">{countAtrasados}</span>
+            </div>
           </div>
         </div>
 
-        <div className="glass p-6 rounded-2xl border border-slate-900/60 flex items-center justify-between">
-          <div className="space-y-2">
-            <span className="text-sm font-semibold text-slate-400">Projetos em Dia</span>
-            <h3 className="text-3xl font-bold text-emerald-400">{countEmAndamento}</h3>
+        {/* KPI 2: Progresso Geral de Marcos */}
+        <div className="glass p-6 rounded-2xl border border-slate-900/60 space-y-4">
+          <span className="text-[10px] font-bold px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-md uppercase tracking-wider">
+            Progresso Geral
+          </span>
+          <div className="flex justify-between items-baseline">
+            <h3 className="text-4xl font-extrabold text-slate-100">
+              {totalMarcos > 0 ? Math.round((marcosConcluidos / totalMarcos) * 100) : 0}%
+            </h3>
+            <p className="text-xs text-slate-500 font-semibold">marcos concluídos</p>
           </div>
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl">
-            <CheckCircle className="h-6 w-6" />
+          <div className="space-y-2 pt-2 border-t border-slate-900/40">
+            <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+                style={{ width: `${totalMarcos > 0 ? (marcosConcluidos / totalMarcos) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-slate-500 font-semibold">
+              <span>{marcosConcluidos} concluídos</span>
+              <span>{totalMarcos} no total</span>
+            </div>
           </div>
         </div>
 
-        <div className="glass p-6 rounded-2xl border border-slate-900/60 flex items-center justify-between">
-          <div className="space-y-2">
-            <span className="text-sm font-semibold text-slate-400">Atenção Crítica</span>
-            <h3 className="text-3xl font-bold text-amber-500">{countAtrasados}</h3>
+        {/* KPI 3: Capítulos & Seções */}
+        <div className="glass p-6 rounded-2xl border border-slate-900/60 space-y-4">
+          <span className="text-[10px] font-bold px-2.5 py-0.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-md uppercase tracking-wider">
+            Capítulos & Seções
+          </span>
+          <div className="flex justify-between items-baseline">
+            <h3 className="text-4xl font-extrabold text-slate-100">{totalSecoes}</h3>
+            <p className="text-xs text-slate-500 font-semibold">seções escritas</p>
           </div>
-          <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
-            <AlertTriangle className="h-6 w-6" />
+          <div className="space-y-1.5 pt-2 border-t border-slate-900/40">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-450">Aprovados:</span>
+              <span className="font-semibold text-slate-200">{secoesAprovadas}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-450">Pendentes:</span>
+              <span className="font-semibold text-amber-450">{secoesPendenteRevisao}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 4: Auditoria IA */}
+        <div className="glass p-6 rounded-2xl border border-slate-900/60 space-y-4">
+          <span className="text-[10px] font-bold px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-md uppercase tracking-wider">
+            Escrita por IA
+          </span>
+          <div className="flex justify-between items-baseline">
+            <h3 className="text-4xl font-extrabold text-slate-100">{scoreIAMedio}%</h3>
+            <p className="text-xs text-slate-500 font-semibold">score médio de IA</p>
+          </div>
+          <div className="space-y-2 pt-2 border-t border-slate-900/40">
+            <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${
+                  scoreIAMedio >= 60 ? 'bg-red-500' : scoreIAMedio >= 40 ? 'bg-amber-500' : 'bg-emerald-500'
+                }`}
+                style={{ width: `${scoreIAMedio}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-slate-500 font-semibold">
+              <span>{todasAuditorias.length} trechos auditados</span>
+              <span className={scoreIAMedio >= 50 ? 'text-amber-450' : 'text-emerald-450'}>
+                {scoreIAMedio >= 50 ? 'Alerta IA' : 'Saudável'}
+              </span>
+            </div>
           </div>
         </div>
       </div>

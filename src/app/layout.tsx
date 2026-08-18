@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SOAI — Sistema de Orientação Acadêmica Inteligente",
+  title: "SOIA — Sistema de Orientação Acadêmica Inteligente",
   description: "Plataforma pessoal para gestão de orientandos, atas estruturadas e análises acadêmicas por IA.",
 };
 
