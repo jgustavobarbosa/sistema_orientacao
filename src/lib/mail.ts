@@ -1,8 +1,4 @@
-import { Resend } from 'resend';
-
-const resendApiKey = process.env.RESEND_API_KEY;
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
-const fromEmail = process.env.FROM_EMAIL || 'soai@academic.dev';
+import { enviarEmail } from './email';
 
 interface EmailAtaParams {
   emailDestino: string;
@@ -19,12 +15,11 @@ export async function enviarEmailAtaRegistrada({
   dataHora,
   reuniaoId
 }: EmailAtaParams) {
-  const subject = `SOAI: Encontro de Orientação #${numeroEncontro} Registrado`;
+  const subject = `SOIA: Encontro de Orientação #${numeroEncontro} Registrado`;
   
-  // HTML do E-mail com visual limpo e moderno
   const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-      <h2 style="color: #4f46e5; margin-bottom: 5px;">SOAI — Sistema de Orientação Acadêmica</h2>
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #334155;">
+      <h2 style="color: #2563eb; margin-bottom: 5px;">SOIA — Sistema de Orientação Acadêmica</h2>
       <p style="color: #64748b; font-size: 14px; margin-top: 0; margin-bottom: 25px;">Registro oficial de atividade acadêmica</p>
       
       <p style="color: #1e293b; font-size: 16px;">Olá, <strong>${nomeAluno}</strong>,</p>
@@ -34,7 +29,7 @@ export async function enviarEmailAtaRegistrada({
       
       <div style="margin: 30px 0; text-align: center;">
         <a href="${process.env.NEXTAUTH_URL}/aluno/reunioes/${reuniaoId}" 
-           style="background-color: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+           style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
           Visualizar Ata Completa & Tarefas
         </a>
       </div>
@@ -46,31 +41,19 @@ export async function enviarEmailAtaRegistrada({
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0 20px 0;" />
       
       <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">
-        E-mail enviado automaticamente pelo SOAI. Não responda a esta mensagem.
+        E-mail enviado automaticamente pelo SOIA. Não responda a esta mensagem.
       </p>
     </div>
   `;
 
-  if (resend) {
-    try {
-      await resend.emails.send({
-        from: `SOAI <${fromEmail}>`,
-        to: emailDestino,
-        subject,
-        html
-      });
-      console.log(`E-mail de ata #${numeroEncontro} enviado com sucesso via Resend para ${emailDestino}.`);
-    } catch (error) {
-      console.error('Erro ao enviar e-mail via Resend:', error);
-    }
-  } else {
-    // Modo de Desenvolvimento (Mock / Fallback)
-    console.log('\n===== [DESENVOLVIMENTO: SIMULAÇÃO DE DISPARO DE E-MAIL] =====');
-    console.log(`Para: ${emailDestino}`);
-    console.log(`Assunto: ${subject}`);
-    console.log(`HTML Body (Truncado):\n${html.replace(/<[^>]*>/g, ' ').substring(0, 300).trim()}...`);
-    console.log('=============================================================\n');
-  }
+  // 1. Logar simulação no terminal
+  console.log('\n===== [SMTP SOIA: DISPARO DE E-MAIL - ATA] =====');
+  console.log(`Para: ${emailDestino}`);
+  console.log(`Assunto: ${subject}`);
+  console.log('================================================\n');
+
+  // 2. Disparar e-mail SMTP real
+  await enviarEmail(emailDestino, subject, html);
 }
 
 interface EmailAlertaParams {
@@ -94,8 +77,8 @@ export async function enviarEmailAlertaPrazo({
     : `ALERTA: Prazo de Marco Acadêmico em ${diasRestantes} dias — ${tituloMarco}`;
 
   const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-      <h2 style="color: ${isAtrasado ? '#dc2626' : '#f59e0b'}; margin-bottom: 5px;">SOAI — Alerta de Cronograma</h2>
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #334155;">
+      <h2 style="color: ${isAtrasado ? '#dc2626' : '#f59e0b'}; margin-bottom: 5px;">SOIA — Alerta de Cronograma</h2>
       <p style="color: #64748b; font-size: 14px; margin-top: 0; margin-bottom: 25px;">Notificação automática de prazo de entrega</p>
       
       <p style="color: #1e293b; font-size: 16px;">Olá, <strong>${nomeAluno}</strong>,</p>
@@ -111,7 +94,7 @@ export async function enviarEmailAlertaPrazo({
       
       <div style="margin: 30px 0; text-align: center;">
         <a href="${process.env.NEXTAUTH_URL}/aluno" 
-           style="background-color: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+           style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
           Ver minha timeline de marcos
         </a>
       </div>
@@ -119,30 +102,17 @@ export async function enviarEmailAlertaPrazo({
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0 20px 0;" />
       
       <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">
-        E-mail enviado automaticamente pelo SOAI. Não responda a esta mensagem.
+        E-mail enviado automaticamente pelo SOIA. Não responda a esta mensagem.
       </p>
     </div>
   `;
 
-  if (resend) {
-    try {
-      await resend.emails.send({
-        from: `SOAI <${fromEmail}>`,
-        to: emailDestino,
-        subject,
-        html
-      });
-      console.log(`E-mail de alerta de prazo para o marco "${tituloMarco}" enviado com sucesso para ${emailDestino}.`);
-    } catch (error) {
-      console.error('Erro ao enviar e-mail de alerta de prazo:', error);
-    }
-  } else {
-    console.log('\n===== [DESENVOLVIMENTO: SIMULAÇÃO DE DISPARO DE E-MAIL - ALERTA] =====');
-    console.log(`Para: ${emailDestino}`);
-    console.log(`Assunto: ${subject}`);
-    console.log(`HTML Body (Truncado):\n${html.replace(/<[^>]*>/g, ' ').substring(0, 300).trim()}...`);
-    console.log('======================================================================\n');
-  }
+  console.log('\n===== [SMTP SOIA: DISPARO DE E-MAIL - ALERTA] =====');
+  console.log(`Para: ${emailDestino}`);
+  console.log(`Assunto: ${subject}`);
+  console.log('===================================================\n');
+
+  await enviarEmail(emailDestino, subject, html);
 }
 
 interface EmailReservaReuniaoParams {
@@ -167,60 +137,50 @@ export async function enviarEmailReservaReuniao({
   acao
 }: EmailReservaReuniaoParams) {
   const isReagendamento = acao === 'REAGENDAMENTO';
-  const subject = `SOAI: ${isReagendamento ? 'Reagendamento' : 'Agendamento'} de Encontro de Orientação Confirmado`;
+  const subject = `SOIA: ${isReagendamento ? 'Reagendamento' : 'Agendamento'} de Encontro de Orientação Confirmado`;
 
   const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-      <h2 style="color: #4f46e5; margin-bottom: 5px;">SOAI — Encontro de Orientação</h2>
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #334155;">
+      <h2 style="color: #2563eb; margin-bottom: 5px;">SOIA — Encontro de Orientação</h2>
       <p style="color: #64748b; font-size: 14px; margin-top: 0; margin-bottom: 25px;">Confirmação de agendamento de reuniões</p>
       
       <p style="color: #1e293b; font-size: 16px;">Olá,</p>
       <p style="color: #334155; font-size: 15px; line-height: 1.5;">
-        Um encontro de orientação foi ${isReagendamento ? 'reagendado' : 'agendado'} com sucesso na plataforma SOAI.
+        Um encontro de orientação foi ${isReagendamento ? 'reagendado' : 'agendado'} com sucesso na plataforma SOIA.
       </p>
       
-      <div style="padding: 15px; background-color: #f8fafc; border-left: 4px solid #4f46e5; border-radius: 6px; margin: 20px 0; font-size: 14px; color: #374151; line-height: 1.6;">
+      <div style="padding: 15px; background-color: #f8fafc; border-left: 4px solid #2563eb; border-radius: 6px; margin: 20px 0; font-size: 14px; color: #374151; line-height: 1.6;">
         <strong>Aluno:</strong> ${nomeAluno}<br/>
         <strong>Orientador:</strong> ${nomeOrientador}<br/>
         <strong>Data/Hora do Encontro:</strong> ${dataHora}<br/>
-        <strong>Objetivo:</strong> ${objetivo || 'Reunião geral de progresso'}<br/>
-        <strong>Link do Google Meet (Fixo):</strong> <a href="${linkMeet}" style="color: #4f46e5; text-decoration: underline; font-weight: bold;">Acessar Sala Virtual</a>
+        <strong>Objetivo/Pauta:</strong> ${objetivo || 'Reunião geral de progresso'}<br/>
+        <strong>Link do Google Meet (Fixo por aluno):</strong> <a href="${linkMeet}" style="color: #2563eb; text-decoration: underline; font-weight: bold;">Acessar Sala Virtual</a>
       </div>
       
       <div style="margin: 30px 0; text-align: center;">
         <a href="${process.env.NEXTAUTH_URL}/login" 
-           style="background-color: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
-          Acessar Portal SOAI
+           style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+          Acessar Portal SOIA
         </a>
       </div>
       
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0 20px 0;" />
       
       <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">
-        E-mail enviado automaticamente pelo SOAI. Não responda a esta mensagem.
+        E-mail enviado automaticamente pelo SOIA. Não responda a esta mensagem.
       </p>
     </div>
   `;
 
   const destinatarios = [emailAluno, emailOrientador];
 
-  if (resend) {
-    try {
-      await resend.emails.send({
-        from: `SOAI <${fromEmail}>`,
-        to: destinatarios,
-        subject,
-        html
-      });
-      console.log(`E-mail de ${acao} enviado com sucesso para ${destinatarios.join(', ')}.`);
-    } catch (error) {
-      console.error(`Erro ao enviar e-mail de ${acao} via Resend:`, error);
-    }
-  } else {
-    console.log(`\n===== [DESENVOLVIMENTO: SIMULAÇÃO DE DISPARO DE E-MAIL - ${acao}] =====`);
-    console.log(`Para: ${destinatarios.join(', ')}`);
-    console.log(`Assunto: ${subject}`);
-    console.log(`HTML Body (Truncado):\n${html.replace(/<[^>]*>/g, ' ').substring(0, 300).trim()}...`);
-    console.log('======================================================================\n');
-  }
+  console.log(`\n===== [SMTP SOIA: DISPARO DE E-MAIL - ${acao}] =====`);
+  console.log(`Destinatários: ${destinatarios.join(', ')}`);
+  console.log(`Assunto: ${subject}`);
+  console.log('=======================================================\n');
+
+  // Disparar e-mail SMTP individual para aluno e orientador para preservar privacidade e garantir entrega
+  await Promise.all(
+    destinatarios.map(email => enviarEmail(email, subject, html))
+  );
 }

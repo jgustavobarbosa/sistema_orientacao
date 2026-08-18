@@ -31,7 +31,6 @@ export async function POST(req: Request) {
       }
 
       // Se ele NÃO possui senha, significa que foi cadastrado previamente pelo professor
-      // Nós atualizamos o cadastro dele gravando a senha e demais dados!
       const userAtualizado = await prisma.usuario.update({
         where: { id: usuarioExistente.id },
         data: {
@@ -60,14 +59,34 @@ export async function POST(req: Request) {
       userId = novoUsuario.id;
     }
 
-    // 5. Exibir link de ativação no console para testes do desenvolvedor
+    // 5. Exibir link de ativação no console para testes locais
     const linkConfirmacao = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/confirm-email?token=${confirmToken}`;
     console.log('\n==================================================');
     console.log(`✉️ [SOIA EMAIL SIMULATOR]`);
     console.log(`Para: ${emailNormalizado}`);
-    console.log(`Olá, ${nome}! Por favor, confirme seu e-mail clicando no link abaixo:`);
     console.log(`🔗 Link: ${linkConfirmacao}`);
     console.log('==================================================\n');
+
+    // 6. Enviar e-mail real via SMTP (Gmail)
+    const assunto = 'Confirme seu e-mail — SOIA';
+    const html = `
+      <div style="background-color: #0b1220; color: #ffffff; padding: 40px 20px; font-family: Inter, Helvetica, Arial, sans-serif; text-align: center; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1px solid #1e293b;">
+        <h2 style="color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 8px;">SOIA</h2>
+        <p style="color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0; margin-bottom: 24px;">Sistema de Orientação Inteligente Avançado</p>
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #1e293b; padding: 24px; border-radius: 12px; margin-bottom: 24px; text-align: left;">
+          <p style="font-size: 14px; color: #e2e8f0; margin-top: 0; line-height: 1.6;">Olá, <strong>${nome}</strong>!</p>
+          <p style="font-size: 14px; color: #94a3b8; line-height: 1.6;">Obrigado por se cadastrar no SOIA. Para confirmar seu e-mail e ativar sua conta, por favor clique no botão abaixo:</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${linkConfirmacao}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; font-size: 13px; font-weight: 700; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">Confirmar Meu E-mail</a>
+          </div>
+          <p style="font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 0;">Se o botão não funcionar, copie e cole o link a seguir no seu navegador: <br/><a href="${linkConfirmacao}" style="color: #3b82f6; text-decoration: underline;">${linkConfirmacao}</a></p>
+        </div>
+        <p style="font-size: 11px; color: #475569; margin-top: 32px;">Este é um e-mail automático enviado pelo SOIA. Por favor, não responda.</p>
+      </div>
+    `;
+
+    const { enviarEmail } = await import('@/lib/email');
+    await enviarEmail(emailNormalizado, assunto, html);
 
     return NextResponse.json({ success: true, userId });
   } catch (err: any) {
