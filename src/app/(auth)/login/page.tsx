@@ -43,7 +43,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+    <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
       
       {/* Coluna Esquerda: Apresentação / Landing Page */}
       <div className="lg:col-span-7 space-y-8 text-left animate-in slide-in-from-left duration-500">
@@ -215,6 +215,20 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-transparent px-6 py-12">
+      {/* Vídeo de Fundo Dinâmico */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute top-0 left-0 w-full h-full object-cover z-0 opacity-15 pointer-events-none"
+      >
+        <source src="/video_SOIA.mp4" type="video/mp4" />
+      </video>
+
+      {/* Gradiente Overlay para misturar com a marca e fundos */}
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-[#030712]/40 via-transparent to-[#030712]/95 z-0 pointer-events-none" />
+
       {/* Efeitos de Blur Azul Premium */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
