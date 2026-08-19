@@ -32,6 +32,9 @@ export async function GET() {
               take: 1
             }
           }
+        },
+        etapasProjeto: {
+          orderBy: { ordem: 'asc' }
         }
       },
     });

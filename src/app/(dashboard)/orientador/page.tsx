@@ -86,6 +86,9 @@ export default async function OrientadorDashboard() {
             take: 1
           }
         }
+      },
+      etapasProjeto: {
+        orderBy: { ordem: 'asc' }
       }
     },
     orderBy: { createdAt: 'desc' },
@@ -380,6 +383,36 @@ export default async function OrientadorDashboard() {
                         </div>
                       </div>
                     )}
+
+                    {/* Alertas Operacionais / Ações Pendentes do Orientador */}
+                    {(() => {
+                      const secoesPendentes = proj.secoesTexto.filter(s => s.status === 'PENDENTE' && s.conteudo.trim() !== '');
+                      const etapaAtiva = proj.etapasProjeto?.find(e => e.statusGate === 'LIBERADO');
+                      let aguardandoGate = false;
+                      if (etapaAtiva) {
+                        const secoesObrigatoriasEtapa = proj.secoesTexto.filter(s => s.etapaProjetoId === etapaAtiva.id && s.obrigatoria);
+                        const aprovadas = secoesObrigatoriasEtapa.filter(s => s.status === 'APROVADO');
+                        aguardandoGate = secoesObrigatoriasEtapa.length > 0 && aprovadas.length === secoesObrigatoriasEtapa.length;
+                      }
+
+                      return (
+                        <div className="pt-3 border-t border-slate-900/50 flex flex-wrap items-center gap-2 text-[10px]">
+                          {secoesPendentes.length > 0 ? (
+                            <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-md font-bold flex items-center gap-1 animate-pulse">
+                              📝 Avaliar: "{secoesPendentes[0].titulo}" (v{secoesPendentes[0].versao})
+                            </span>
+                          ) : aguardandoGate ? (
+                            <span className="px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-md font-bold flex items-center gap-1">
+                              🚪 Fechar Gate: {etapaAtiva?.titulo}
+                            </span>
+                          ) : (
+                            <span className="text-slate-550 italic">
+                              Status: Aluno redigindo {proj.secoesTexto.find(s => s.status !== 'APROVADO')?.titulo || 'próximas seções'}.
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}

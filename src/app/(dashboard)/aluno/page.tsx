@@ -321,6 +321,103 @@ function AlunoDashboardContent() {
         {/* Coluna Esquerda: Estatísticas de conformidade e Timeline */}
         <div className="lg:col-span-2 space-y-6">
           
+          {/* PAINEL DINÂMICO DE AÇÕES E CRONOGRAMA DE METAS */}
+          {(() => {
+            const secoesParaCorrigir = projeto.secoesTexto?.filter((s: any) => s.status === 'REVISAR') || [];
+            const secoesAguardandoFeedback = projeto.secoesTexto?.filter((s: any) => s.status === 'PENDENTE' && s.conteudo.trim() !== '') || [];
+            
+            const etapaAtiva = projeto.etapasProjeto?.find((e: any) => e.statusGate === 'LIBERADO');
+            let aguardandoGate = false;
+            if (etapaAtiva) {
+              const secoesObrigatoriasEtapa = projeto.secoesTexto?.filter((s: any) => s.etapaProjetoId === etapaAtiva.id && s.obrigatoria) || [];
+              const aprovadas = secoesObrigatoriasEtapa.filter((s: any) => s.status === 'APROVADO');
+              aguardandoGate = secoesObrigatoriasEtapa.length > 0 && aprovadas.length === secoesObrigatoriasEtapa.length;
+            }
+
+            // Mapear cronograma sugerido baseado no prazo de defesa
+            const dataDefesa = projeto.prazoDefesa ? new Date(projeto.prazoDefesa) : null;
+            const diasAteDefesa = dataDefesa ? Math.max(1, Math.ceil((dataDefesa.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+            
+            const etapasRestantes = projeto.etapasProjeto?.filter((e: any) => e.statusGate !== 'APROVADO') || [];
+            const cronogramaRecomendado: { titulo: string; prazoEstimado: string }[] = [];
+            
+            if (diasAteDefesa > 0 && etapasRestantes.length > 0) {
+              const diasPorEtapa = Math.floor(diasAteDefesa / etapasRestantes.length);
+              etapasRestantes.forEach((e: any, idx: number) => {
+                const dataPrazo = new Date();
+                dataPrazo.setDate(hoje.getDate() + (diasPorEtapa * (idx + 1)));
+                cronogramaRecomendado.push({
+                  titulo: e.titulo,
+                  prazoEstimado: dataPrazo.toLocaleDateString('pt-BR')
+                });
+              });
+            }
+
+            return (
+              <div className="space-y-4">
+                {/* 🎯 Card de Próximas Ações Acadêmicas */}
+                <div className="glass p-5 rounded-2xl border border-slate-900/60 bg-gradient-to-r from-slate-950 via-slate-900/10 to-slate-950 space-y-4">
+                  <h3 className="font-bold text-slate-200 text-sm flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
+                    Diretrizes de Ação & Foco Atual
+                  </h3>
+
+                  {secoesParaCorrigir.length > 0 ? (
+                    <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-200 text-xs rounded-xl space-y-1">
+                      <p className="font-bold">⚠️ Ação Requerida (Ajustes do Professor):</p>
+                      <p className="text-[11px] text-slate-350 leading-relaxed">
+                        O orientador solicitou correções em {secoesParaCorrigir.length} capítulo(s): 
+                        <strong> {secoesParaCorrigir.map((s: any) => s.titulo).join(', ')}</strong>.
+                        Acesse a aba **Redação de Capítulos** para visualizar as pendências granulares e ajustar o texto.
+                      </p>
+                    </div>
+                  ) : secoesAguardandoFeedback.length > 0 ? (
+                    <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs rounded-xl space-y-1">
+                      <p className="font-bold">⏳ Aguardando Avaliação:</p>
+                      <p className="text-[11px] text-slate-350 leading-relaxed">
+                        Seu capítulo <strong>"{secoesAguardandoFeedback[0].titulo}"</strong> foi enviado e está sendo avaliado pelo professor. 
+                        Aproveite para revisar fontes teóricas ou preparar as próximas seções.
+                      </p>
+                    </div>
+                  ) : aguardandoGate ? (
+                    <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-200 text-xs rounded-xl space-y-1 animate-pulse">
+                      <p className="font-bold">🚪 Aguardando Liberação de Gate:</p>
+                      <p className="text-[11px] text-slate-350 leading-relaxed">
+                        Excelente! Você concluiu todas as seções obrigatórias da etapa **{etapaAtiva?.titulo}**. 
+                        O professor precisa fechar o gate científico desta etapa para liberar as próximas diretrizes.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs rounded-xl space-y-1">
+                      <p className="font-bold">📝 Próxima Entrega Científica:</p>
+                      <p className="text-[11px] text-slate-350 leading-relaxed">
+                        Seu foco atual é a etapa **{etapaAtiva?.titulo || 'Delimitação'}**. 
+                        Inicie a redação e envie as seções obrigatórias pendentes desta fase para avaliação.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 📅 Cronograma Sugerido baseado na Defesa */}
+                {cronogramaRecomendado.length > 0 && (
+                  <div className="glass p-5 rounded-2xl border border-slate-900/60 space-y-3.5">
+                    <h3 className="font-bold text-slate-200 text-xs tracking-wide uppercase text-slate-400">
+                      Cronograma Recomendado de Metas
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {cronogramaRecomendado.slice(0, 4).map((c, i) => (
+                        <div key={i} className="p-3 bg-slate-950/40 border border-slate-900 rounded-xl space-y-1 text-center">
+                          <span className="text-[9px] text-slate-500 font-bold block uppercase truncate">{c.titulo}</span>
+                          <span className="text-xs font-bold text-slate-250 block">{c.prazoEstimado}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Caixa de Predição & Plano de Estudos por IA */}
           <div className="glass p-6 rounded-2xl border border-blue-500/15 bg-gradient-to-br from-slate-950 via-blue-950/5 to-slate-950 space-y-5 shadow-lg shadow-blue-500/5">
             <div className="flex items-center gap-2">
