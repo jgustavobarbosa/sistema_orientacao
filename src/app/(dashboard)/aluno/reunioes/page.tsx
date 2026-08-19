@@ -7,6 +7,7 @@ import { PapelUsuario } from '@prisma/client';
 import { FileText, Calendar, ChevronRight, Video, Clock, HelpCircle, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { agendarReuniao, reagendarReuniao } from '@/app/actions';
+import { FormRequererHorario } from '@/components/form-requerer-horario';
 
 const DIAS_SEMANA = [
   'Domingo',
@@ -98,64 +99,7 @@ export default async function AlunoReunioesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Painel Esquerdo: Agendar Reunião */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="glass p-6 rounded-2xl border border-slate-900/60 flex flex-col space-y-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
-                <Calendar className="h-5 w-5" />
-              </div>
-              <h3 className="font-bold text-slate-200">Requerer Horário</h3>
-            </div>
-
-            {slotsCombinados.length === 0 ? (
-              <div className="p-4 bg-slate-900/40 border border-slate-900/60 rounded-xl text-center space-y-1">
-                <HelpCircle className="h-6 w-6 text-slate-500 mx-auto" />
-                <p className="text-xs text-slate-400">Sem horários disponibilizados.</p>
-                <p className="text-[10px] text-slate-500">Seu orientador {projeto.orientador.nome} ainda não cadastrou slots de disponibilidade.</p>
-              </div>
-            ) : (
-              <form action={agendarReuniao.bind(null, session.user.id)} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="horarioCombinado" className="text-xs font-semibold text-slate-400">
-                    Selecione o Dia e Horário Disponível
-                  </label>
-                  <select
-                    id="horarioCombinado"
-                    name="horarioCombinado"
-                    required
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none"
-                  >
-                    <option value="">Escolha um slot livre da agenda...</option>
-                    {slotsCombinados.map((slot) => (
-                      <option key={slot.id} value={`${slot.dataIso}_${slot.slotId}`}>
-                        {slot.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="objetivo" className="text-xs font-semibold text-slate-400">
-                    Objetivo / Pauta da Orientação
-                  </label>
-                  <textarea
-                    id="objetivo"
-                    name="objetivo"
-                    rows={3}
-                    required
-                    placeholder="Descreva brevemente o objetivo da reunião e quais dúvidas quer sanar..."
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none resize-none"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-md shadow-indigo-650/10 cursor-pointer"
-                >
-                  Confirmar Agendamento
-                </button>
-              </form>
-            )}
-          </div>
+          <FormRequererHorario slotsCombinados={slotsCombinados} orientandoId={session.user.id} />
 
           {/* Agenda de Disponibilidade Semanal de Referência */}
           <div className="glass p-6 rounded-2xl border border-slate-900/60 flex flex-col space-y-4">

@@ -19,7 +19,8 @@ export async function POST(req: Request) {
       oQueProduzi,
       oQueMudou,
       ondeTenhoDuvida,
-      oQuePrecisoAvancar
+      oQuePrecisoAvancar,
+      linkAnexo
     } = await req.json();
 
     if (!secaoId || !conteudo) {
@@ -51,7 +52,8 @@ export async function POST(req: Request) {
         conteudo: secao.conteudo,
         autorPapel: 'ORIENTANDO',
         correcoes: secao.correcoes,
-        parecerIA: secao.parecerIA
+        parecerIA: secao.parecerIA,
+        linkAnexo: secao.linkAnexo
       }
     });
 
@@ -83,7 +85,8 @@ export async function POST(req: Request) {
         oQueProduzi,
         oQueMudou,
         ondeTenhoDuvida,
-        oQuePrecisoAvancar
+        oQuePrecisoAvancar,
+        linkAnexo
       }
     });
 

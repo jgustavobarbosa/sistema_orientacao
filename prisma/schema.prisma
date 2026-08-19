@@ -319,6 +319,7 @@ model SecaoTexto {
   correcoes          String?           @db.Text // Sugestões e anotações do professor
   versao             Int               @default(1)
   parecerIA          String?           @db.Text
+  linkAnexo          String?           @db.Text
   
   // Protocolo de submissão de 4 blocos
   oQueProduzi        String?           @db.Text
@@ -354,6 +355,7 @@ model VersaoSecaoTexto {
   autorPapel   String      // "ORIENTANDO" ou "ORIENTADOR" (para as réplicas)
   correcoes    String?     @db.Text
   parecerIA    String?     @db.Text
+  linkAnexo    String?     @db.Text
   createdAt    DateTime    @default(now())
 }
 

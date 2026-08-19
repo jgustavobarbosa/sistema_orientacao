@@ -145,6 +145,26 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
                     </div>
                   )}
 
+                  {secao.linkAnexo && (
+                    <div className="p-3.5 bg-blue-500/10 border border-blue-500/20 text-blue-200 text-xs rounded-xl space-y-1">
+                      <p className="font-bold flex items-center gap-1.5">
+                        <FileText className="h-4 w-4 shrink-0 text-blue-400" />
+                        Documento/Planilha Externa de Apoio:
+                      </p>
+                      <p className="text-[11px] text-slate-350 leading-relaxed">
+                        O aluno anexou um documento externo para esta seção. Clique para abrir em nova guia:
+                      </p>
+                      <a 
+                        href={secao.linkAnexo}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-400 hover:text-blue-300 font-bold underline inline-block mt-1 break-all"
+                      >
+                        {secao.linkAnexo}
+                      </a>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-slate-450 uppercase tracking-wider">Texto do Aluno:</p>
                     <div className="p-4 bg-slate-950/60 border border-slate-900 rounded-xl text-sm text-slate-300 leading-relaxed whitespace-pre-line max-h-[250px] overflow-y-auto pr-1">

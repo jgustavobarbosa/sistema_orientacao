@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Send, Sparkles, BookOpen, AlertCircle, HelpCircle } from 'lucide-react';
+import { Send, Sparkles, BookOpen, AlertCircle, HelpCircle, FileText, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SecaoData {
@@ -17,6 +17,9 @@ interface SecaoData {
   oQueMudou: string | null;
   ondeTenhoDuvida: string | null;
   oQuePrecisoAvancar: string | null;
+  correcoes: string | null;
+  linkAnexo: string | null;
+  itensRevisao?: any[];
 }
 
 interface FormRedacaoAlunoProps {
@@ -34,6 +37,7 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
   const [oQueMudou, setOQueMudou] = React.useState('');
   const [ondeTenhoDuvida, setOndeTenhoDuvida] = React.useState('');
   const [oQuePrecisoAvancar, setOQuePrecisoAvancar] = React.useState('');
+  const [linkAnexo, setLinkAnexo] = React.useState('');
 
   const [loading, setLoading] = React.useState(false);
   const [erro, setErro] = React.useState('');
@@ -50,6 +54,7 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
       setOQueMudou(secaoAtiva.oQueMudou || '');
       setOndeTenhoDuvida(secaoAtiva.ondeTenhoDuvida || '');
       setOQuePrecisoAvancar(secaoAtiva.oQuePrecisoAvancar || '');
+      setLinkAnexo(secaoAtiva.linkAnexo || '');
       setErro('');
       setSucesso('');
     }
@@ -74,12 +79,13 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
           oQueProduzi,
           oQueMudou,
           ondeTenhoDuvida,
-          oQuePrecisoAvancar
+          oQuePrecisoAvancar,
+          linkAnexo
         }),
       });
 
       if (res.ok) {
-        setSucesso('Capítulo submetido com sucesso para avaliação!');
+        setSucesso('🎉 Capítulo submetido com sucesso para avaliação!');
         router.refresh();
       } else {
         const text = await res.text();
@@ -119,9 +125,17 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
         
         {/* Seletor de Seções da Grade do Aluno */}
         <div className="space-y-1.5">
-          <label htmlFor="secaoSelect" className="text-xs font-semibold text-slate-400">
-            Escolher Seção do Modelo
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="secaoSelect" className="text-xs font-semibold text-slate-400">
+              Escolher Seção do Modelo
+            </label>
+            <div className="group relative cursor-pointer text-slate-500 hover:text-slate-350 transition-colors">
+              <HelpCircle className="h-4 w-4" />
+              <div className="absolute right-0 bottom-6 hidden group-hover:block w-56 bg-slate-950/95 border border-slate-900/80 p-2.5 rounded-xl text-[10px] text-slate-350 shadow-2xl z-20 leading-relaxed normal-case">
+                Escolha qual capítulo da sua grade metodológica você está escrevendo ou revisando no momento.
+              </div>
+            </div>
+          </div>
           <select
             id="secaoSelect"
             value={secaoId}
@@ -136,9 +150,43 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
           </select>
         </div>
 
+        {/* 📌 BLOCO DE CORREÇÕES DO PROFESSOR EM DESTAQUE (Quando REVISAR) */}
+        {secaoAtiva && secaoAtiva.status === 'REVISAR' && secaoAtiva.correcoes && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl space-y-2 text-xs">
+            <span className="font-bold text-red-400 uppercase tracking-wider block text-[9px] flex items-center gap-1">
+              <AlertCircle className="h-3.5 w-3.5" />
+              Anotações e Ajustes Solicitados pelo Professor:
+            </span>
+            <p className="text-slate-300 leading-relaxed whitespace-pre-line bg-slate-950/45 p-3 rounded-lg border border-red-500/5">
+              {secaoAtiva.correcoes}
+            </p>
+            {secaoAtiva.itensRevisao && secaoAtiva.itensRevisao.length > 0 && (
+              <div className="pt-1.5 space-y-1">
+                <span className="font-semibold text-slate-450 block text-[9px]">Checklist Pendente:</span>
+                <ul className="list-disc pl-4 text-[10px] text-slate-400 space-y-0.5">
+                  {secaoAtiva.itensRevisao.filter((i: any) => !i.resolvido).map((i: any) => (
+                    <li key={i.id}>
+                      <span className="text-slate-500 font-bold">{i.local}:</span> {i.acaoRequerida}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Caixa de Prompt/Diretrizes e Critérios do Catálogo */}
         {secaoAtiva && (secaoAtiva.instrucaoPrompt || secaoAtiva.criteriosAceite) && (
           <div className="p-3.5 bg-indigo-950/20 border border-indigo-900/30 rounded-xl space-y-2 text-[11px] leading-relaxed">
+            <div className="flex justify-between items-center pb-1 border-b border-indigo-900/15">
+              <span className="font-bold text-indigo-400 uppercase tracking-wider text-[9px]">Grade Científica</span>
+              <div className="group relative cursor-pointer text-indigo-400 hover:text-indigo-300">
+                <HelpCircle className="h-3.5 w-3.5" />
+                <div className="absolute right-0 bottom-5 hidden group-hover:block w-56 bg-slate-950/95 border border-slate-900/80 p-2.5 rounded-xl text-[10px] text-slate-350 shadow-2xl z-20 leading-relaxed normal-case">
+                  Estas são diretrizes metodológicas e critérios de aprovação definidos no catálogo do SOIA para esta seção específica.
+                </div>
+              </div>
+            </div>
             {secaoAtiva.instrucaoPrompt && (
               <div>
                 <span className="font-bold text-indigo-400 uppercase tracking-wider block text-[9px]">💡 Diretriz de Escrita:</span>
@@ -156,9 +204,17 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
 
         {/* Editor de Texto Científico */}
         <div className="space-y-1.5">
-          <label htmlFor="conteudo" className="text-xs font-semibold text-slate-400">
-            Conteúdo do Capítulo (Texto Completo)
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="conteudo" className="text-xs font-semibold text-slate-400">
+              Conteúdo do Capítulo (Texto Completo)
+            </label>
+            <div className="group relative cursor-pointer text-slate-500 hover:text-slate-350">
+              <HelpCircle className="h-4 w-4" />
+              <div className="absolute right-0 bottom-6 hidden group-hover:block w-56 bg-slate-950/95 border border-slate-900/80 p-2.5 rounded-xl text-[10px] text-slate-350 shadow-2xl z-20 leading-relaxed">
+                Digite ou cole aqui a redação integral do capítulo. O orientador fará a revisão e anotações a partir deste texto.
+              </div>
+            </div>
+          </div>
           <textarea
             id="conteudo"
             required
@@ -172,7 +228,15 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
 
         {/* Protocolo de 4 blocos */}
         <div className="border-t border-slate-900/40 pt-4 space-y-3">
-          <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Protocolo de Submissão</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Protocolo de Submissão</h4>
+            <div className="group relative cursor-pointer text-slate-500 hover:text-slate-350">
+              <HelpCircle className="h-4 w-4" />
+              <div className="absolute right-0 bottom-6 hidden group-hover:block w-56 bg-slate-950/95 border border-slate-900/80 p-2.5 rounded-xl text-[10px] text-slate-350 shadow-2xl z-20 leading-relaxed">
+                O preenchimento deste protocolo é obrigatório. Ele fornece metadados do seu progresso, facilitando o diagnóstico rápido do professor.
+              </div>
+            </div>
+          </div>
           
           <div className="space-y-1">
             <label htmlFor="oQueProduzi" className="text-[10px] text-slate-400 block font-semibold">1. O que produzi nesta versão?</label>
@@ -219,6 +283,29 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
               value={oQuePrecisoAvancar}
               onChange={(e) => setOQuePrecisoAvancar(e.target.value)}
               placeholder="ex: Feedback metodológico..."
+              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+            />
+          </div>
+
+          {/* 🖇️ Link de Documento/Planilha de Apoio */}
+          <div className="space-y-1 border-t border-slate-900/30 pt-3">
+            <div className="flex items-center justify-between">
+              <label htmlFor="linkAnexo" className="text-[10px] text-slate-400 block font-semibold">
+                Link do Documento/Planilha de Apoio (Opcional)
+              </label>
+              <div className="group relative cursor-pointer text-slate-500 hover:text-slate-350">
+                <HelpCircle className="h-3.5 w-3.5" />
+                <div className="absolute right-0 bottom-5 hidden group-hover:block w-56 bg-slate-950/95 border border-slate-900/80 p-2.5 rounded-xl text-[10px] text-slate-350 shadow-2xl z-20 leading-relaxed">
+                  Cole o link compartilhado (ex: Google Drive, Dropbox, OneDrive ou planilha) caso trabalhe por arquivos externos.
+                </div>
+              </div>
+            </div>
+            <input
+              type="url"
+              id="linkAnexo"
+              value={linkAnexo}
+              onChange={(e) => setLinkAnexo(e.target.value)}
+              placeholder="ex: https://docs.google.com/document/d/... ou link de planilha de dados"
               className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
             />
           </div>
