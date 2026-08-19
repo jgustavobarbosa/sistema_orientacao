@@ -35,6 +35,7 @@ import {
   decidirStageGate
 } from '@/app/actions';
 import { CountdownTimer } from '@/components/countdown-timer';
+import { FormDecisaoGate } from '@/components/form-decisao-gate';
 
 interface AlunoPageProps {
   params: Promise<{ id: string }>;
@@ -324,34 +325,7 @@ export default async function DetalhesAlunoPage({ params }: AlunoPageProps) {
                           </p>
                         </div>
 
-                        <form 
-                          onSubmit={async (event) => {
-                            event.preventDefault();
-                            const form = event.currentTarget;
-                            const note = new FormData(form).get('parecerGate') as string;
-                            try {
-                              await decidirStageGate(e.id, 'APROVADO', note);
-                              window.location.reload();
-                            } catch (err: any) {
-                              alert(err.message || 'Erro ao aprovar o gate da etapa.');
-                            }
-                          }}
-                          className="flex flex-col md:flex-row gap-3"
-                        >
-                          <input 
-                            type="text" 
-                            name="parecerGate"
-                            required
-                            placeholder="Adicione um parecer descritivo do gate científico..."
-                            className="flex-1 px-3 py-2 bg-slate-950/50 border border-slate-900 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs outline-none"
-                          />
-                          <button 
-                            type="submit"
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl cursor-pointer whitespace-nowrap transition-colors"
-                          >
-                            Fechar Gate e Avançar
-                          </button>
-                        </form>
+                        <FormDecisaoGate etapaProjetoId={e.id} />
                       </div>
                     )}
                   </div>
