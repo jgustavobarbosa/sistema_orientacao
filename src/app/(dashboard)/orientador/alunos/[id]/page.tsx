@@ -325,7 +325,7 @@ export default async function DetalhesAlunoPage({ params }: AlunoPageProps) {
                           </p>
                         </div>
 
-                        <FormDecisaoGate etapaProjetoId={e.id} />
+                        <FormDecisaoGate etapaProjetoId={e.id} desabilitado={!gatePronto} />
                       </div>
                     )}
                   </div>

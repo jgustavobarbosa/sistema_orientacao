@@ -908,20 +908,7 @@ export async function revisarSecao(secaoId: string, status: 'APROVADO' | 'REVISA
     let statusFinal = status;
     let correcoesFinais = correcoes;
 
-    if (status === 'APROVADO') {
-      const temNotaBaixa = 
-        notaPertinencia < 2 || 
-        notaCoerencia < 2 || 
-        notaEvidencia < 2 || 
-        notaClareza < 2 || 
-        notaConformidade < 2;
-
-      if (temNotaBaixa) {
-        statusFinal = 'REVISAR';
-        const avisoRubrica = `[REBAIXADO AUTOMATICAMENTE: Notas da Rubrica 5D inferiores a 2/3 exigem revisão científica obrigatória.]\n\n`;
-        correcoesFinais = avisoRubrica + (correcoes || '');
-      }
-    }
+    // Aprovado ou Revisar respeita a decisão explícita do orientador
 
     const secao = await prisma.secaoTexto.update({
       where: { id: secaoId },
