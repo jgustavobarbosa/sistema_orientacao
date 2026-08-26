@@ -194,7 +194,7 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
 
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-slate-450 uppercase tracking-wider">Texto do Aluno:</p>
-                    <div className="p-4 bg-slate-950/60 border border-slate-900 rounded-xl text-sm text-slate-300 leading-relaxed whitespace-pre-line max-h-[250px] overflow-y-auto pr-1">
+                    <div className="p-4 bg-slate-950/60 border border-slate-900 rounded-xl text-sm text-slate-300 leading-relaxed whitespace-pre-line max-h-[350px] overflow-y-auto pr-1">
                       {secao.conteudo}
                     </div>
                   </div>
@@ -358,18 +358,18 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
                       </div>
 
                       <div className="space-y-1.5">
-                        <label htmlFor="correcoes" className="text-xs font-semibold text-slate-400">
-                          Correções, Comentários e Ajustes
-                        </label>
-                        <textarea
-                          id="correcoes"
-                          name="correcoes"
-                          rows={4}
-                          defaultValue={secao.correcoes || ''}
-                          placeholder="Adicione observações, cortes ou o que reescrever para auxiliar o aluno..."
-                          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none resize-none placeholder:text-slate-800 leading-relaxed"
-                        />
-                      </div>
+                                              <label htmlFor="correcoes" className="text-xs font-semibold text-slate-400">
+                                                Correções, Comentários e Ajustes
+                                              </label>
+                                              <textarea
+                                                id="correcoes"
+                                                name="correcoes"
+                                                rows={5}
+                                                defaultValue={secao.correcoes || ''}
+                                                placeholder="Adicione observações, cortes ou o que reescrever para auxiliar o aluno..."
+                                                className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm outline-none resize-none placeholder:text-slate-800 leading-relaxed"
+                                              />
+                                            </div>
 
                       <div className="flex items-center gap-3">
                         <button

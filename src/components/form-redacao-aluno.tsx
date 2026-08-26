@@ -218,18 +218,18 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
           <textarea
             id="conteudo"
             required
-            rows={12}
+            rows={14}
             value={conteudo}
             onChange={(e) => setConteudo(e.target.value)}
             placeholder="Escreva ou cole aqui a redação completa desta seção para que o orientador faça as correções..."
-            className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-xs placeholder-slate-650 outline-none resize-none font-mono leading-relaxed"
+            className="w-full px-4 py-3 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-xl text-slate-100 text-sm placeholder-slate-650 outline-none resize-none leading-relaxed"
           />
         </div>
 
         {/* Protocolo de 4 blocos */}
         <div className="border-t border-slate-900/40 pt-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Protocolo de Submissão</h4>
+            <h4 className="text-xs font-bold text-slate-450 uppercase tracking-wider">Protocolo de Submissão</h4>
             <div className="group relative cursor-pointer text-slate-500 hover:text-slate-350">
               <HelpCircle className="h-4 w-4" />
               <div className="absolute right-0 bottom-6 hidden group-hover:block w-56 bg-slate-950/95 border border-slate-900/80 p-2.5 rounded-xl text-[10px] text-slate-350 shadow-2xl z-20 leading-relaxed">
@@ -239,7 +239,7 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
           </div>
           
           <div className="space-y-1">
-            <label htmlFor="oQueProduzi" className="text-[10px] text-slate-400 block font-semibold">1. O que produzi nesta versão?</label>
+            <label htmlFor="oQueProduzi" className="text-xs text-slate-400 block font-semibold">1. O que produzi nesta versão?</label>
             <input
               type="text"
               id="oQueProduzi"
@@ -247,43 +247,43 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
               value={oQueProduzi}
               onChange={(e) => setOQueProduzi(e.target.value)}
               placeholder="ex: Redigi os parágrafos sobre delimitação espacial..."
-              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-sm text-slate-200 outline-none placeholder:text-slate-700"
             />
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="oQueMudou" className="text-[10px] text-slate-400 block font-semibold">2. O que mudou em relação à versão anterior?</label>
+            <label htmlFor="oQueMudou" className="text-xs text-slate-400 block font-semibold">2. O que mudou em relação à versão anterior?</label>
             <input
               type="text"
               id="oQueMudou"
               value={oQueMudou}
               onChange={(e) => setOQueMudou(e.target.value)}
               placeholder="ex: Ajustei a hipótese C baseado no feedback..."
-              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-sm text-slate-200 outline-none placeholder:text-slate-700"
             />
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="ondeTenhoDuvida" className="text-[10px] text-slate-400 block font-semibold">3. Onde tenho dúvida ou gargalo?</label>
+            <label htmlFor="ondeTenhoDuvida" className="text-xs text-slate-400 block font-semibold">3. Onde tenho dúvida ou gargalo?</label>
             <input
               type="text"
               id="ondeTenhoDuvida"
               value={ondeTenhoDuvida}
               onChange={(e) => setOndeTenhoDuvida(e.target.value)}
               placeholder="ex: Profundidade da revisão sistemática..."
-              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-sm text-slate-200 outline-none placeholder:text-slate-700"
             />
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="oQuePrecisoAvancar" className="text-[10px] text-slate-400 block font-semibold">4. O que preciso para avançar?</label>
+            <label htmlFor="oQuePrecisoAvancar" className="text-xs text-slate-400 block font-semibold">4. O que preciso para avançar?</label>
             <input
               type="text"
               id="oQuePrecisoAvancar"
               value={oQuePrecisoAvancar}
               onChange={(e) => setOQuePrecisoAvancar(e.target.value)}
               placeholder="ex: Feedback metodológico..."
-              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-sm text-slate-200 outline-none placeholder:text-slate-700"
             />
           </div>
 
@@ -326,10 +326,10 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
               value={linkAnexo}
               onChange={(e) => setLinkAnexo(e.target.value)}
               placeholder="https://docs.google.com/document/d/..."
-              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
+              className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-sm text-slate-200 outline-none placeholder:text-slate-700"
             />
             {linkAnexo && (
-              <div className="flex items-center gap-1.5 text-[9px] text-emerald-400">
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400">
                 <CheckCircle2 className="h-3 w-3" />
                 <span>Link anexado — o orientador receberá o link na submissão.</span>
               </div>
