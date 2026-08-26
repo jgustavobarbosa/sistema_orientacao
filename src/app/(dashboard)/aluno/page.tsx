@@ -33,6 +33,7 @@ function AlunoDashboardContent() {
   const [nivel, setNivel] = React.useState('TCC');
   const [orientadorId, setOrientadorId] = React.useState('');
   const [loadingProposta, setLoadingProposta] = React.useState(false);
+  const [mensagemEdit, setMensagemEdit] = React.useState('');
 
   React.useEffect(() => {
     fetchDashboardData();
@@ -571,6 +572,65 @@ function AlunoDashboardContent() {
         {/* Coluna Direita: Minhas Atividades / Plano de Trabalho das Reuniões */}
         <div className="lg:col-span-1 space-y-6">
           <h2 className="text-lg font-bold text-slate-200">Plano de Trabalho</h2>
+          
+          {/* 📝 Card de Edição do Projeto - colapsável */}
+          <details className="group glass rounded-2xl border border-slate-900/60 overflow-hidden">
+            <summary className="px-6 py-4 bg-slate-900/30 border-b border-slate-900/60 cursor-pointer list-none flex items-center justify-between gap-2 hover:bg-slate-900/50 transition-colors select-none outline-none">
+              <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                <BookOpen className="h-4 w-4" />
+                Editar Projeto
+              </span>
+              <span className="text-[9px] text-slate-500">{'[Expandir]'}</span>
+            </summary>
+            <div className="p-6 space-y-4">
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                Altere o título, tema, objetivos e demais campos do seu projeto. Cada campo é salvo individualmente.
+              </p>
+
+              <form className="space-y-3" onSubmit={async (e) => {e.preventDefault(); const fd = new FormData(e.target as HTMLFormElement); const campo = fd.get('campo') as string; const valor = fd.get('valor') as string; if (!campo || !valor) return; try { const res = await fetch('/api/aluno/atualizar-projeto', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({campo, valor})}); if (res.ok) { setProjeto((prev: any) => ({...prev, [campo]: valor})); setMensagemEdit('Salvo!'); setTimeout(() => setMensagemEdit(''), 2000); } else { const d = await res.json(); setMensagemEdit(d.error || 'Erro'); } } catch { setMensagemEdit('Erro ao salvar'); } }}>
+                <input type="hidden" name="campo" value="titulo" />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Título do Projeto</label>
+                  <input type="text" name="valor" defaultValue={projeto.titulo} required
+                    className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none" />
+                </div>
+                <button type="submit" className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer">Salvar Título</button>
+              </form>
+
+              <form className="space-y-3" onSubmit={async (e) => {e.preventDefault(); const fd = new FormData(e.target as HTMLFormElement); const campo = fd.get('campo') as string; const valor = fd.get('valor') as string; if (!campo || !valor) return; try { const res = await fetch('/api/aluno/atualizar-projeto', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({campo, valor})}); if (res.ok) { setProjeto((prev: any) => ({...prev, [campo]: valor})); setMensagemEdit('Salvo!'); setTimeout(() => setMensagemEdit(''), 2000); } else { const d = await res.json(); setMensagemEdit(d.error || 'Erro'); } } catch { setMensagemEdit('Erro ao salvar'); } }}>
+                <input type="hidden" name="campo" value="temaFrase" />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tema / Frase do Tema</label>
+                  <input type="text" name="valor" defaultValue={projeto.temaFrase || ''}
+                    placeholder="Ex: Protocolo de Governança da Informação para o Câncer Colorretal no SUS"
+                    className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-700" />
+                </div>
+                <button type="submit" className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer">Salvar Tema</button>
+              </form>
+
+              <form className="space-y-3" onSubmit={async (e) => {e.preventDefault(); const fd = new FormData(e.target as HTMLFormElement); const campo = fd.get('campo') as string; const valor = fd.get('valor') as string; if (!campo || !valor) return; try { const res = await fetch('/api/aluno/atualizar-projeto', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({campo, valor})}); if (res.ok) { setProjeto((prev: any) => ({...prev, [campo]: valor})); setMensagemEdit('Salvo!'); setTimeout(() => setMensagemEdit(''), 2000); } else { const d = await res.json(); setMensagemEdit(d.error || 'Erro'); } } catch { setMensagemEdit('Erro ao salvar'); } }}>
+                <input type="hidden" name="campo" value="perguntaPesquisa" />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pergunta de Pesquisa</label>
+                  <textarea name="valor" defaultValue={projeto.perguntaPesquisa || ''} rows={2}
+                    placeholder="Qual pergunta central seu trabalho responde?"
+                    className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none resize-none placeholder:text-slate-700" />
+                </div>
+                <button type="submit" className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer">Salvar Pergunta</button>
+              </form>
+
+              <form className="space-y-3" onSubmit={async (e) => {e.preventDefault(); const fd = new FormData(e.target as HTMLFormElement); const campo = fd.get('campo') as string; const valor = fd.get('valor') as string; if (!campo || !valor) return; try { const res = await fetch('/api/aluno/atualizar-projeto', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({campo, valor})}); if (res.ok) { setProjeto((prev: any) => ({...prev, [campo]: valor})); setMensagemEdit('Salvo!'); setTimeout(() => setMensagemEdit(''), 2000); } else { const d = await res.json(); setMensagemEdit(d.error || 'Erro'); } } catch { setMensagemEdit('Erro ao salvar'); } }}>
+                <input type="hidden" name="campo" value="objetivoGeral" />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Objetivo Geral</label>
+                  <textarea name="valor" defaultValue={projeto.objetivoGeral || ''} rows={2}
+                    placeholder="Qual o objetivo principal do seu trabalho?"
+                    className="w-full px-3 py-2 bg-slate-900/50 border border-slate-800 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none resize-none placeholder:text-slate-700" />
+                </div>
+                <button type="submit" className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer">Salvar Objetivo</button>
+              </form>
+            </div>
+          </details>
 
           <div className="glass p-6 rounded-2xl border border-slate-900/60 flex flex-col space-y-4">
             <div className="flex items-center justify-between border-b border-slate-900/60 pb-3">

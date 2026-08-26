@@ -102,10 +102,16 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
                       Revisar
                     </span>
                   )}
-                  {secao.status === 'PENDENTE' && (
+                  {secao.status === 'PENDENTE' && secao.conteudo && secao.conteudo.trim().length > 0 && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 border border-amber-500/20 text-amber-400 animate-pulse">
                       <Clock className="h-4 w-4" />
-                      Revisão Pendente
+                      Aguardando Revisão
+                    </span>
+                  )}
+                  {secao.status === 'PENDENTE' && (!secao.conteudo || secao.conteudo.trim().length === 0) && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-slate-600/10 border border-slate-600/20 text-slate-400">
+                      <FileText className="h-4 w-4" />
+                      Aguardando Texto
                     </span>
                   )}
                 </div>
@@ -115,6 +121,27 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Texto do Aluno & IA */}
                 <div className="space-y-4">
+                  {/* Indicador de status do conteúdo */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {secao.conteudo && secao.conteudo.trim().length > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {secao.conteudo.length > 500 ? 'Texto longo' : 'Texto curto'} ({secao.conteudo.length} caracteres)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                        <AlertCircle className="h-3 w-3" />
+                        Sem texto escrito
+                      </span>
+                    )}
+                    {secao.linkAnexo && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                        <FileText className="h-3 w-3" />
+                        Anexo disponível
+                      </span>
+                    )}
+                  </div>
+
                   {secao.oQueProduzi && (
                     <div className="p-4 bg-slate-950/40 border border-slate-900 rounded-xl space-y-2">
                       <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider border-b border-slate-900/60 pb-1.5">Relatório de Produção do Aluno</h4>

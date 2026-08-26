@@ -5,7 +5,7 @@ const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // Configuração do OpenRouter (LLM Real)
 const openRouterApiKey = process.env.OPENROUTER_API_KEY;
-const openRouterModel = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash:free';
+const openRouterModel = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
 
 // Função auxiliar para chamar a API do OpenRouter
 async function chamarOpenRouter(prompt: string): Promise<string> {
@@ -31,8 +31,12 @@ async function chamarOpenRouter(prompt: string): Promise<string> {
   });
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Erro na API do OpenRouter: ${res.status} - ${errorText}`);
+    let errorDetail = '';
+    try {
+      const errData = await res.json();
+      errorDetail = errData.error?.message || errData.error || '';
+    } catch { errorDetail = await res.text(); }
+    throw new Error(`API OpenRouter (${res.status}): ${errorDetail}`);
   }
 
   const data = await res.json();
@@ -253,7 +257,7 @@ export async function analisarRevisaoTexto(
   textoNovo: string
 ): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const modelName = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash:free';
+  const modelName = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
 
   const prompt = `
 Você é um consultor acadêmico sênior e avaliador de redação científica.
@@ -300,7 +304,7 @@ export async function auditarTextoIA(conteudo: string): Promise<{
   pontuacao: number;
 }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const modelName = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash:free';
+  const modelName = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
 
   const prompt = `
 Você é um especialista em detecção de textos gerados por Inteligência Artificial. Sua tarefa é analisar o texto fornecido e determinar, com o máximo de precisão possível, se ele foi escrito por um humano ou gerado por uma IA (como ChatGPT, Claude, Gemini, Grok, etc.).
@@ -334,39 +338,51 @@ Siga rigorosamente estes passos para a análise:
    - 0 = definitivamente humano
    - 100 = definitivamente gerado por IA
 
-IMPORTANTE: Você deve formatar a sua resposta estritamente seguindo o padrão de tags abaixo para que possamos realizar o parse. Não use nenhuma outra marcação markdown na resposta além das tags solicitadas:
-
-[CLASSIFICACAO] <Insira aqui o texto exato da categoria selecionada no passo 2, sem aspas>
-[CONFIANCA] <Insira aqui apenas o número de 0 a 100 da confiança correspondente>
-[JUSTIFICATIVA] <Insira aqui a justificativa do passo 3 e citações, limpa, direta, sem asteriscos markdown>
-[PONTUACAO] <Insira aqui apenas o número de 0 a 100 da pontuação do passo 4>
-`;
+Responda APENAS com um objeto JSON neste formato, sem markdown ou tags:
+{
+  "classificacao": "texto exato da categoria",
+  "confianca": 0-100,
+  "justificativa": "justificativa detalhada",
+  "pontuacao": 0-100
+}`;
 
   const fallback = {
     classificacao: 'Indeterminado / Ambíguo',
     confianca: 50,
-    justificativa: 'Não foi possível realizar o processamento devido à ausência de chaves de API ou falha de rede.',
+    justificativa: 'Não foi possível realizar o processamento automático. Verifique se a chave de API do OpenRouter está configurada e se o modelo está disponível.',
     pontuacao: 50
   };
 
   if (!apiKey) {
-    return fallback;
+    return {
+      classificacao: 'Não analisado',
+      confianca: 0,
+      justificativa: 'Auditoria de IA desativada: chave de API do OpenRouter não configurada. Para ativar, adicione OPENROUTER_API_KEY no .env.',
+      pontuacao: 0
+    };
+  }
+
+  // Verificar se o texto tem conteúdo mínimo para análise
+  if (!conteudo || conteudo.trim().length < 50) {
+    return {
+      classificacao: 'Texto insuficiente',
+      confianca: 0,
+      justificativa: 'O texto submetido é muito curto para uma análise estatística confiável. Escreva pelo menos 50 caracteres para a auditoria funcionar.',
+      pontuacao: 0
+    };
   }
 
   try {
     console.log('[OPENROUTER] Executando auditoria de IA no texto...');
     const rawResponse = await chamarOpenRouter(prompt);
 
-    // Parse simples via delimitadores
-    const matchClassificacao = rawResponse.match(/\[CLASSIFICACAO\](.*)/i);
-    const matchConfianca = rawResponse.match(/\[CONFIANCA\](.*)/i);
-    const matchJustificativa = rawResponse.match(/\[JUSTIFICATIVA\]([\s\S]*?)(?=\[PONTUACAO\]|$)/i);
-    const matchPontuacao = rawResponse.match(/\[PONTUACAO\](.*)/i);
+    // Parse via JSON (response_format é json_object)
+    const parsed = JSON.parse(rawResponse);
 
-    const classificacao = matchClassificacao ? matchClassificacao[1].trim() : 'Indeterminado / Ambíguo';
-    const confianca = matchConfianca ? parseInt(matchConfianca[1].replace(/[^0-9]/g, '')) || 50 : 50;
-    const justificativa = matchJustificativa ? limparMarkdown(matchJustificativa[1].trim()) : 'Análise realizada com sucesso.';
-    const pontuacao = matchPontuacao ? parseInt(matchPontuacao[1].replace(/[^0-9]/g, '')) || 50 : 50;
+    const classificacao = parsed.classificacao || 'Indeterminado / Ambíguo';
+    const confianca = typeof parsed.confianca === 'number' ? parsed.confianca : 50;
+    const justificativa = parsed.justificativa ? limparMarkdown(parsed.justificativa) : 'Análise realizada com sucesso.';
+    const pontuacao = typeof parsed.pontuacao === 'number' ? parsed.pontuacao : 50;
 
     return {
       classificacao,

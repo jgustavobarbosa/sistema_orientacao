@@ -287,16 +287,36 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
             />
           </div>
 
-          {/* 🖇️ Link de Documento/Planilha de Apoio */}
+          {/* 🖇️ Guia de Trabalho com Arquivos do Google Drive */}
           <div className="space-y-1 border-t border-slate-900/30 pt-3">
+            <details className="group">
+              <summary className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer list-none flex items-center gap-1 select-none outline-none">
+                <FileText className="h-3.5 w-3.5" />
+                Como trabalhar com arquivos do Google Drive?
+              </summary>
+              <div className="mt-2 p-3 bg-indigo-950/15 border border-indigo-900/25 rounded-xl space-y-2 text-[10px] text-slate-350 leading-relaxed">
+                <p><strong className="text-slate-300">Passo a passo recomendado:</strong></p>
+                <ol className="list-decimal pl-4 space-y-1.5">
+                  <li>Crie um documento separado no Google Drive para <strong>cada seção</strong> (Introdução, Metodologia, etc.)</li>
+                  <li>Escreva o conteúdo diretamente no documento do Google Drive</li>
+                  <li>Compartilhe o documento com seu orientador (permissão de <strong>comentário</strong> ou <strong>edição</strong>)</li>
+                  <li>Cole o link compartilhado no campo abaixo e submeta a seção</li>
+                  <li>O orientador poderá corrigir e comentar diretamente no arquivo</li>
+                </ol>
+                <p className="text-amber-400 font-semibold mt-1">💡 Dica: mantenha um arquivo por seção — facilita a correção e o feedback.</p>
+              </div>
+            </details>
+          </div>
+
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
               <label htmlFor="linkAnexo" className="text-[10px] text-slate-400 block font-semibold">
-                Link do Documento/Planilha de Apoio (Opcional)
+                Link do Documento (Google Drive) <span className="text-slate-600">— opcional</span>
               </label>
               <div className="group relative cursor-pointer text-slate-500 hover:text-slate-350">
                 <HelpCircle className="h-3.5 w-3.5" />
                 <div className="absolute right-0 bottom-5 hidden group-hover:block w-56 bg-slate-950/95 border border-slate-900/80 p-2.5 rounded-xl text-[10px] text-slate-350 shadow-2xl z-20 leading-relaxed">
-                  Cole o link compartilhado (ex: Google Drive, Dropbox, OneDrive ou planilha) caso trabalhe por arquivos externos.
+                  Cole o link compartilhado do Google Drive. O orientador poderá acessar, corrigir e comentar diretamente no arquivo.
                 </div>
               </div>
             </div>
@@ -305,9 +325,15 @@ export function FormRedacaoAluno({ projetoId, secoes }: FormRedacaoAlunoProps) {
               id="linkAnexo"
               value={linkAnexo}
               onChange={(e) => setLinkAnexo(e.target.value)}
-              placeholder="ex: https://docs.google.com/document/d/... ou link de planilha de dados"
+              placeholder="https://docs.google.com/document/d/..."
               className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 focus:border-indigo-500/50 rounded-lg text-slate-200 text-xs outline-none placeholder:text-slate-800"
             />
+            {linkAnexo && (
+              <div className="flex items-center gap-1.5 text-[9px] text-emerald-400">
+                <CheckCircle2 className="h-3 w-3" />
+                <span>Link anexado — o orientador receberá o link na submissão.</span>
+              </div>
+            )}
           </div>
         </div>
 

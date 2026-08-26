@@ -118,10 +118,34 @@ export default async function OrientadorDashboard() {
   const secoesAprovadas = projetosAtivos.reduce((acc, p) => acc + p.secoesTexto.filter(s => s.status === 'APROVADO').length, 0);
   const secoesPendenteRevisao = projetosAtivos.reduce((acc, p) => acc + p.secoesTexto.filter(s => s.status === 'PENDENTE').length, 0);
 
-  const todasAuditorias = projetosAtivos.flatMap(p => p.secoesTexto.flatMap(s => s.auditoriasIA));
-  const scoreIAMedio = todasAuditorias.length > 0
-    ? Math.round(todasAuditorias.reduce((acc, curr) => acc + curr.pontuacao, 0) / todasAuditorias.length)
+  const secoesComAuditoria = projetosAtivos.flatMap(p =>
+    p.secoesTexto
+      .filter(s => s.auditoriasIA.length > 0 && s.conteudo.trim().length > 0)
+      .map(s => ({
+        auditoria: s.auditoriasIA[0],
+        pesoTexto: s.conteudo.trim().length,
+      }))
+  );
+
+  const auditoriasValidas = secoesComAuditoria.filter(
+    a => a.auditoria.pontuacao !== 50 && a.auditoria.pontuacao > 0
+  );
+
+  const pesoTotal = auditoriasValidas.reduce((acc, a) => acc + a.pesoTexto, 0);
+  const scoreIAMedio = pesoTotal > 0
+    ? Math.round(
+        auditoriasValidas.reduce((acc, a) => acc + (a.auditoria.pontuacao * a.pesoTexto), 0) / pesoTotal
+      )
     : 0;
+
+  const marcadoresIA = auditoriasValidas
+    .filter(a => a.auditoria.pontuacao >= 60)
+    .slice(0, 3)
+    .map(a => ({
+      justificativa: a.auditoria.justificativa,
+      pontuacao: a.auditoria.pontuacao,
+      pesoTexto: a.pesoTexto,
+    }));
 
   const todosMarcos = projetosAtivos.flatMap(p => p.marcos);
   const totalMarcos = todosMarcos.length;
@@ -229,12 +253,28 @@ export default async function OrientadorDashboard() {
               />
             </div>
             <div className="flex justify-between text-[10px] text-slate-500 font-semibold">
-              <span>{todasAuditorias.length} trechos auditados</span>
+              <span>{auditoriasValidas.length} textos auditados</span>
               <span className={scoreIAMedio >= 50 ? 'text-amber-450' : 'text-emerald-450'}>
-                {scoreIAMedio >= 50 ? 'Alerta IA' : 'Saudável'}
+                {scoreIAMedio >= 50 ? 'Alerta IA' : scoreIAMedio > 0 ? 'Saudável' : 'Sem dados'}
               </span>
             </div>
           </div>
+
+          {/* Marcadores de detecção de IA */}
+          {marcadoresIA.length > 0 && (
+            <div className="pt-2 space-y-2 border-t border-slate-900/40">
+              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Indícios detectados:</p>
+              {marcadoresIA.map((m, i) => (
+                <div key={i} className="p-2 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1">
+                  <div className="flex justify-between text-[9px]">
+                    <span className="font-bold text-red-400">Score: {m.pontuacao}/100</span>
+                    <span className="text-slate-500">Texto: {m.pesoTexto} caracteres</span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 leading-relaxed line-clamp-2">{m.justificativa}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
