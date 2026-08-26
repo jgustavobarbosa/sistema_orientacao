@@ -10,6 +10,7 @@ import {
   Users, 
   FileText, 
   Calendar, 
+  Cog,
   LogOut, 
   GraduationCap,
   BookOpen
@@ -24,7 +25,8 @@ export function AppSidebar({ session }: { session: Session }) {
     ? [
         { name: 'Dashboard', href: '/orientador', icon: LayoutDashboard },
         { name: 'Meus Alunos', href: '/orientador/alunos', icon: Users },
-        { name: 'Minha Agenda', href: '/orientador/agenda', icon: Calendar },
+        { name: 'Agenda', href: '/orientador/agenda', icon: Calendar },
+        { name: 'Configurações', href: '/orientador/configuracoes', icon: Cog },
         { name: 'Histórico de Atas', href: '/orientador/reunioes', icon: FileText },
       ]
     : [

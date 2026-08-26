@@ -23,6 +23,7 @@ export async function criarAluno(formData: FormData) {
   try {
     const { prisma } = await import('@/lib/db');
     const { PapelUsuario } = await import('@prisma/client');
+    const crypto = await import('crypto');
 
     const emailFormatado = email.toLowerCase().trim();
 
@@ -35,14 +36,50 @@ export async function criarAluno(formData: FormData) {
       return redirect('/orientador/alunos?error=EmailDuplicado');
     }
 
-    await prisma.usuario.create({
+    // Gerar token de ativação
+    const confirmToken = crypto.randomBytes(32).toString('hex');
+    const confirmTokenExp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 dias
+
+    const aluno = await prisma.usuario.create({
       data: {
         nome,
         email: emailFormatado,
         papel: PapelUsuario.ORIENTANDO,
         ativo,
+        confirmToken,
+        confirmTokenExp,
       },
     });
+
+    // Enviar e-mail de boas-vindas com link para criar senha
+    const linkCompletar = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/completar-cadastro?token=${confirmToken}`;
+    const assunto = 'SOIA: Você foi cadastrado na plataforma!';
+    const html = `
+      <div style="background-color: #0b1220; color: #ffffff; padding: 40px 20px; font-family: Inter, Helvetica, Arial, sans-serif; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1px solid #1e293b;">
+        <h2 style="color: #ffffff; font-size: 24px; font-weight: 800; margin-bottom: 8px;">SOIA</h2>
+        <p style="color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-top: 0; margin-bottom: 24px;">Sistema de Orientação Inteligente Avançado</p>
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #1e293b; padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+          <p style="font-size: 14px; color: #e2e8f0; margin-top: 0;">Olá, <strong>${nome}</strong>!</p>
+          <p style="font-size: 14px; color: #94a3b8;">Seu orientador cadastrou você na plataforma SOIA. Para acessar, crie sua senha clicando no botão abaixo:</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${linkCompletar}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; font-size: 13px; font-weight: 700; text-decoration: none; border-radius: 8px; display: inline-block;">Criar Minha Senha</a>
+          </div>
+          <p style="font-size: 12px; color: #64748b;">Se o botão não funcionar: <a href="${linkCompletar}" style="color: #3b82f6;">${linkCompletar}</a></p>
+          <p style="font-size: 12px; color: #64748b; margin-top: 16px;">Este link expira em 7 dias.</p>
+        </div>
+        <p style="font-size: 11px; color: #475569;">Este é um e-mail automático enviado pelo SOIA.</p>
+      </div>
+    `;
+
+    const { enviarEmail } = await import('@/lib/email');
+    const emailEnviado = await enviarEmail(emailFormatado, assunto, html);
+
+    if (emailEnviado) {
+      console.log(`Convite enviado para ${emailFormatado}`);
+    } else {
+      console.log(`Falha ao enviar email para ${emailFormatado}, mas usuário foi criado. Token: ${linkCompletar}`);
+    }
+
     revalidatePath('/orientador/alunos');
   } catch (error: any) {
     if (error.message?.includes('redirect')) {
@@ -158,7 +195,10 @@ export async function criarProjeto(formData: FormData) {
 
     let driveFolderId: string | null = null;
     if (aluno) {
-      driveFolderId = await criarEstruturaPastasDrive(aluno.nome, titulo);
+      const orientador = await prisma.usuario.findUnique({
+        where: { id: orientadorId }
+      });
+      driveFolderId = orientador?.googleDriveEmail || await criarEstruturaPastasDrive(aluno.nome, titulo);
     }
 
     const projeto = await prisma.projetoOrientacao.create({
@@ -626,8 +666,16 @@ export async function agendarReuniao(orientandoId: string, formData: FormData) {
       where: { projetoId: projeto.id }
     });
 
-    // 5. Link Google Meet Fixo do Projeto
-    const linkVideoconferencia = projeto.linkMeetFixo || 'https://meet.google.com/fxv-mbbh-rqj';
+    // 5. Gerar Google Meet dinâmico via Calendar
+    const { criarEventoCalendar } = await import('@/lib/google');
+    const { eventId, hangoutLink } = await criarEventoCalendar({
+      numeroEncontro: totalEncontros + 1,
+      dataHoraInicio,
+      descricao: `SOAI: Encontro de Orientação com ${projeto.orientando.nome}.\nObjetivo: ${objetivo || 'Acompanhamento de progresso'}`,
+      emailAluno: projeto.orientando.email,
+      nomeAluno: projeto.orientando.nome,
+    });
+    const linkVideoconferencia = hangoutLink || projeto.linkMeetFixo || 'https://meet.google.com/fxv-mbbh-rqj';
 
     await prisma.reuniao.create({
       data: {
@@ -636,6 +684,7 @@ export async function agendarReuniao(orientandoId: string, formData: FormData) {
         dataHoraInicio,
         dataHoraFim,
         linkVideoconferencia,
+        calendarEventId: eventId,
         situacaoCronograma: 'VERDE',
         sinteseAvanco: [],
         decisoes: [],
@@ -1115,7 +1164,15 @@ export async function salvarConfigAgendaAutomatica(orientadorId: string, formDat
               where: { projetoId: projeto.id }
             });
 
-            const linkMeet = projeto.linkMeetFixo || 'https://meet.google.com/fxv-mbbh-rqj';
+            const { criarEventoCalendar } = await import('@/lib/google');
+            const { eventId, hangoutLink } = await criarEventoCalendar({
+              numeroEncontro: totalEncontros + 1,
+              dataHoraInicio,
+              descricao: `SOAI: Encontro Periódico com ${projeto.orientando.nome}.\nAgendamento automático do sistema.`,
+              emailAluno: projeto.orientando.email,
+              nomeAluno: projeto.orientando.nome,
+            });
+            const linkMeet = hangoutLink || projeto.linkMeetFixo || 'https://meet.google.com/fxv-mbbh-rqj';
 
             // Criar reunião
             await prisma.reuniao.create({
@@ -1125,6 +1182,7 @@ export async function salvarConfigAgendaAutomatica(orientadorId: string, formDat
                 dataHoraInicio,
                 dataHoraFim,
                 linkVideoconferencia: linkMeet,
+                calendarEventId: eventId,
                 situacaoCronograma: 'VERDE',
                 sinteseAvanco: [],
                 decisoes: [],

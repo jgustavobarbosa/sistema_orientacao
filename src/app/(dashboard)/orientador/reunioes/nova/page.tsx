@@ -46,13 +46,14 @@ async function salvarAta(data: any) {
     let calendarEventId: string | null = null;
     if (proximoEncontro && proximoEncontro.dataHora) {
       try {
-        calendarEventId = await criarEventoCalendar({
+        const { eventId } = await criarEventoCalendar({
           numeroEncontro: numeroEncontro + 1,
           dataHoraInicio: new Date(proximoEncontro.dataHora),
           descricao: `SOAI: Encontro #${numeroEncontro + 1} de Orientação Acadêmica.\nCritério de Entrega: ${proximoEncontro.criterioAdequado || 'A combinar'}\nMaterial prévio (72h antes): ${proximoEncontro.materialPrevio || 'Nenhum'}`,
           emailAluno: projetoComAluno.orientando.email,
           nomeAluno: projetoComAluno.orientando.nome
         });
+        calendarEventId = eventId;
       } catch (err) {
         console.error('Falha ao registrar compromisso no Google Calendar:', err);
       }
