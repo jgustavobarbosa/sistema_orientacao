@@ -21,7 +21,11 @@ export default withAuth(
     }
 
     // Controle de Acesso Baseado em Papéis (RBAC)
-    if (path.startsWith('/orientador') && papel !== PapelUsuario.ORIENTADOR) {
+    if (path.startsWith('/admin') && papel !== PapelUsuario.ADMIN) {
+      return NextResponse.redirect(new URL('/login?error=NaoAutorizado', req.url));
+    }
+
+    if (path.startsWith('/orientador') && papel !== PapelUsuario.ORIENTADOR && papel !== PapelUsuario.ADMIN) {
       // Aluno tentando acessar área de Orientador - Redireciona e nega
       return NextResponse.redirect(new URL('/aluno?error=AcessoNegado', req.url));
     }
@@ -49,6 +53,7 @@ export default withAuth(
 // Proteger apenas as rotas de painel e APIs internas
 export const config = {
   matcher: [
+    '/admin/:path*',
     '/orientador/:path*',
     '/aluno/:path*',
     // APIs que precisam de proteção global (exclui auth e hooks externos)

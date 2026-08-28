@@ -13,15 +13,26 @@ import {
   Cog,
   LogOut, 
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Shield,
+  ClipboardList
 } from 'lucide-react';
 import { PapelUsuario } from '@prisma/client';
 
 export function AppSidebar({ session }: { session: Session }) {
   const pathname = usePathname();
   const papel = session.user.papel as PapelUsuario;
+  const isAdmin = papel === PapelUsuario.ADMIN;
 
-  const menuItems = papel === PapelUsuario.ORIENTADOR 
+  const menuItems = isAdmin
+    ? [
+        { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+        { name: 'Usuários', href: '/admin/usuarios', icon: Users },
+        { name: 'Projetos', href: '/admin/projetos', icon: ClipboardList },
+        { name: 'Logs do Sistema', href: '/admin/logs', icon: FileText },
+        { name: 'Configurações', href: '/orientador/configuracoes', icon: Cog },
+      ]
+    : papel === PapelUsuario.ORIENTADOR 
     ? [
         { name: 'Dashboard', href: '/orientador', icon: LayoutDashboard },
         { name: 'Meus Alunos', href: '/orientador/alunos', icon: Users },
