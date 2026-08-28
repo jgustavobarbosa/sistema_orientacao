@@ -26,11 +26,16 @@ export function AppSidebar({ session }: { session: Session }) {
 
   const menuItems = isAdmin
     ? [
-        { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+        { name: 'Dashboard Orientador', href: '/orientador', icon: LayoutDashboard },
+        { name: 'Meus Alunos', href: '/orientador/alunos', icon: Users },
+        { name: 'Agenda', href: '/orientador/agenda', icon: Calendar },
+        { name: 'Configurações', href: '/orientador/configuracoes', icon: Cog },
+        { name: 'Histórico de Atas', href: '/orientador/reunioes', icon: FileText },
+        { name: '─── Admin ───', href: '#', icon: Shield, divider: true },
+        { name: 'Painel Admin', href: '/admin', icon: LayoutDashboard },
         { name: 'Usuários', href: '/admin/usuarios', icon: Users },
         { name: 'Projetos', href: '/admin/projetos', icon: ClipboardList },
         { name: 'Logs do Sistema', href: '/admin/logs', icon: FileText },
-        { name: 'Configurações', href: '/orientador/configuracoes', icon: Cog },
       ]
     : papel === PapelUsuario.ORIENTADOR 
     ? [
@@ -62,6 +67,15 @@ export function AppSidebar({ session }: { session: Session }) {
       {/* Navegação Principal */}
       <nav className="flex-1 px-4 py-6 space-y-1.5">
         {menuItems.map((item) => {
+          if (item.divider) {
+            const Icon = item.icon;
+            return (
+              <div key={item.name} className="flex items-center gap-2 px-2 py-2">
+                <Icon className="h-3 w-3 text-slate-600" />
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{item.name.replace(/───/g, '').trim()}</span>
+              </div>
+            );
+          }
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
           return (
