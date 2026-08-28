@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db';
 import { PapelUsuario } from '@prisma/client';
 import { Shield, Search, UserPlus, Filter } from 'lucide-react';
 import Link from 'next/link';
-import { alterarPapelAdmin, alternarStatusAdmin, resetarSenhaAdmin } from './actions';
+import { alternarStatusAdmin, resetarSenhaAdmin, editarUsuarioAdmin, impersonateUser } from './actions';
 
 export default async function AdminUsuariosPage({
   searchParams,
@@ -162,6 +162,11 @@ export default async function AdminUsuariosPage({
                             : 'bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border-indigo-500/20'
                         }`}>
                           {u.ativo ? 'Bloquear' : 'Ativar'}
+                        </button>
+                      </form>
+                      <form action={impersonateUser.bind(null, u.id)}>
+                        <button className="px-3 py-1.5 text-xs font-bold bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/20 rounded-lg transition-all cursor-pointer">
+                          Entrar como
                         </button>
                       </form>
                     </div>

@@ -142,3 +142,25 @@ export async function editarUsuarioAdmin(formData: FormData) {
   revalidatePath('/admin/usuarios');
   redirect('/admin/usuarios');
 }
+
+export async function impersonateUser(targetUserId: string) {
+  const session = await checkAdmin();
+  try {
+    const { prisma } = await import('@/lib/db');
+    const target = await prisma.usuario.findUnique({ where: { id: targetUserId } });
+    if (!target) return redirect('/admin/usuarios?error=UsuarioNaoEncontrado');
+
+    await serverLog('ADMIN_ACTION', 'AVISO',
+      `Admin impersonou ${target.email} (${target.nome})`,
+      { targetUserId, targetEmail: target.email }, session.user.id);
+
+    // Redirect to login with callback to the user's intended dashboard
+    const redirectMap: Record<string, string> = {
+      ADMIN: '/admin', ORIENTADOR: '/orientador', ORIENTANDO: '/aluno',
+    };
+    redirect(`/api/auth/signin?callbackUrl=${redirectMap[target.papel] || '/'}`);
+  } catch (e: any) {
+    await serverLog('ERRO', 'ERRO', `Falha ao impersonar: ${e.message}`);
+    redirect('/admin/usuarios?error=ErroInterno');
+  }
+}
