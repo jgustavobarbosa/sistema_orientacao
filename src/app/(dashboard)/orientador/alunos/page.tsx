@@ -14,7 +14,7 @@ interface AlunosPageProps {
 export default async function AlunosPage({ searchParams }: AlunosPageProps) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR) {
+  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR && session.user.papel !== PapelUsuario.ADMIN) {
     redirect('/login');
   }
 

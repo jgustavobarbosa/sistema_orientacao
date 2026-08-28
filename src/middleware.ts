@@ -16,7 +16,7 @@ export default withAuth(
     const ativo = token.ativo as boolean;
 
     // Se o usuário não está ativo (exceto o próprio orientador que é sempre ativo)
-    if (!ativo && papel !== PapelUsuario.ORIENTADOR) {
+    if (!ativo && papel !== PapelUsuario.ORIENTADOR && papel !== PapelUsuario.ADMIN) {
       return NextResponse.redirect(new URL('/login?error=AguardandoAutorizacao', req.url));
     }
 

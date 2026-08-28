@@ -10,7 +10,7 @@ import Link from 'next/link';
 export default async function HistoricoAtasPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR) {
+  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR && session.user.papel !== PapelUsuario.ADMIN) {
     redirect('/login');
   }
 

@@ -129,7 +129,7 @@ export default async function NovaAtaPage({ searchParams }: NovaAtaPageProps) {
   const session = await getServerSession(authOptions);
   const { projetoId } = await searchParams;
 
-  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR) {
+  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR && session.user.papel !== PapelUsuario.ADMIN) {
     redirect('/login');
   }
 

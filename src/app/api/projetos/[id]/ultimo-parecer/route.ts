@@ -8,7 +8,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const session = await getServerSession(authOptions);
   const { id: projetoId } = await params;
 
-  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR) {
+  if (!session || (session.user.papel !== PapelUsuario.ORIENTADOR && session.user.papel !== PapelUsuario.ADMIN)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 

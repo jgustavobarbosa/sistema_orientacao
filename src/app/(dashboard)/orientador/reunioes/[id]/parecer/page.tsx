@@ -28,7 +28,7 @@ export default async function OrientadorVerParecerPage({ params }: VerParecerPro
   const session = await getServerSession(authOptions);
   const { id: documentoId } = await params;
 
-  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR) {
+  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR && session.user.papel !== PapelUsuario.ADMIN) {
     redirect('/login');
   }
 

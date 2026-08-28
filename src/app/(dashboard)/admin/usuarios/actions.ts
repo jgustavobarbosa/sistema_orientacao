@@ -145,22 +145,19 @@ export async function editarUsuarioAdmin(formData: FormData) {
 
 export async function impersonateUser(targetUserId: string) {
   const session = await checkAdmin();
-  try {
-    const { prisma } = await import('@/lib/db');
-    const target = await prisma.usuario.findUnique({ where: { id: targetUserId } });
-    if (!target) return redirect('/admin/usuarios?error=UsuarioNaoEncontrado');
+  const { prisma } = await import('@/lib/db');
+  const target = await prisma.usuario.findUnique({ where: { id: targetUserId } });
+  if (!target) return redirect('/admin/usuarios?error=UsuarioNaoEncontrado');
 
-    await serverLog('ADMIN_ACTION', 'AVISO',
-      `Admin impersonou ${target.email} (${target.nome})`,
-      { targetUserId, targetEmail: target.email }, session.user.id);
+  // serverLog ANTES do redirect — fire-and-forget, nao pode falhar
+  serverLog('ADMIN_ACTION', 'AVISO',
+    `Admin impersonou ${target.email} (${target.nome})`,
+    { targetUserId, targetEmail: target.email }, session.user.id).catch(() => {});
 
-    // Redirect to login with callback to the user's intended dashboard
-    const redirectMap: Record<string, string> = {
-      ADMIN: '/admin', ORIENTADOR: '/orientador', ORIENTANDO: '/aluno',
-    };
-    redirect(`/api/auth/signin?callbackUrl=${redirectMap[target.papel] || '/'}`);
-  } catch (e: any) {
-    await serverLog('ERRO', 'ERRO', `Falha ao impersonar: ${e.message}`);
-    redirect('/admin/usuarios?error=ErroInterno');
-  }
+  // Redirect para fazer logout e login como o usuario alvo
+  // NOTA: redirect() lanca NEXT_REDIRECT — nao colocar dentro de try/catch
+  const redirectMap: Record<string, string> = {
+    ADMIN: '/admin', ORIENTADOR: '/orientador', ORIENTANDO: '/aluno',
+  };
+  redirect(`/api/auth/signin?callbackUrl=${redirectMap[target.papel] || '/'}`);
 }

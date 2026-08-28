@@ -17,7 +17,7 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
   const session = await getServerSession(authOptions);
   const { id: alunoId } = await params;
 
-  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR) {
+  if (!session || session.user.papel !== PapelUsuario.ORIENTADOR && session.user.papel !== PapelUsuario.ADMIN) {
     redirect('/login');
   }
 
