@@ -132,6 +132,7 @@ model Usuario {
   notificacoes       Notificacao[]
   agendaAutomatica   ConfigAgendaAutomatica[]
   googleDriveEmail   String? // Email do Google Drive do orientador
+  linkMeetFixo       String? // Link padrão do Google Meet para reunioes
 }
 
 model ProjetoOrientacao {
