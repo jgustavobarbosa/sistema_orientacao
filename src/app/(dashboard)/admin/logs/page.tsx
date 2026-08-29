@@ -4,12 +4,13 @@ import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { PapelUsuario } from '@prisma/client';
-import { FileText, Search, Filter, AlertTriangle, Info, AlertCircle, Skull } from 'lucide-react';
+import { FileText, Search, Filter, AlertTriangle, Info, AlertCircle, Skull, CheckCircle, Trash2 } from 'lucide-react';
+import { toggleLogResolvido, limparLogsResolvidos } from './actions';
 
 export default async function AdminLogsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tipo?: string; sev?: string; page?: string }>;
+  searchParams: Promise<{ tipo?: string; sev?: string; resolvido?: string; page?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.papel !== PapelUsuario.ADMIN) redirect('/login');
@@ -17,12 +18,15 @@ export default async function AdminLogsPage({
   const params = await searchParams;
   const filtroTipo = params.tipo || '';
   const filtroSev = params.sev || '';
+  const filtroResolvido = params.resolvido || '';
   const page = parseInt(params.page || '1', 10);
   const pageSize = 100;
 
   const where: any = {};
   if (filtroTipo) where.tipo = filtroTipo;
   if (filtroSev) where.severidade = filtroSev;
+  if (filtroResolvido === 'sim') where.resolvido = true;
+  else if (filtroResolvido === 'nao') where.resolvido = false;
 
   const [total, logs] = await Promise.all([
     prisma.sistemaLog.count({ where }),
@@ -65,6 +69,12 @@ export default async function AdminLogsPage({
           </h1>
           <p className="text-slate-400 mt-1">{total} registro(s) no total</p>
         </div>
+        <form action={limparLogsResolvidos}>
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 font-semibold text-sm rounded-xl transition-all cursor-pointer">
+            <Trash2 className="h-4 w-4" />
+            Limpar Resolvidos
+          </button>
+        </form>
       </div>
 
       {/* Stats cards */}
@@ -97,6 +107,13 @@ export default async function AdminLogsPage({
             <option value="ERRO">ERRO</option>
             <option value="CRITICO">CRÍTICO</option>
           </select>
+          <select name="resolvido" defaultValue={filtroResolvido}
+            className="px-4 py-2.5 bg-slate-900/50 border border-slate-800 rounded-xl text-sm text-slate-300 outline-none focus:border-indigo-500/50"
+          >
+            <option value="">Todos</option>
+            <option value="nao">Não resolvidos</option>
+            <option value="sim">Resolvidos</option>
+          </select>
           <button type="submit"
             className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm rounded-xl transition-all cursor-pointer"
           >
@@ -115,7 +132,8 @@ export default async function AdminLogsPage({
                 <th className="px-6 py-3">Tipo</th>
                 <th className="px-6 py-3">Severidade</th>
                 <th className="px-6 py-3">Usuário</th>
-                <th className="px-6 py-3">Mensagem</th>
+                <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3">Mensagem</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-900/40">
@@ -142,6 +160,18 @@ export default async function AdminLogsPage({
                     </td>
                     <td className="px-6 py-3 text-xs text-slate-400">
                       {log.usuario?.nome || log.usuario?.email || '-'}
+                    </td>
+                    <td className="px-6 py-3">
+                      <form action={toggleLogResolvido.bind(null, log.id, log.resolvido)}>
+                        <button className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                          log.resolvido
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-slate-300'
+                        }`}>
+                          <CheckCircle className={`h-3 w-3 ${log.resolvido ? 'text-emerald-400' : 'text-slate-600'}`} />
+                          {log.resolvido ? 'Resolvido' : 'Pendente'}
+                        </button>
+                      </form>
                     </td>
                     <td className="px-6 py-3 text-xs text-slate-300 max-w-md">
                       <div className="truncate" title={log.mensagem}>{log.mensagem}</div>

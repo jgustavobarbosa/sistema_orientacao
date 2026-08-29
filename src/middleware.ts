@@ -56,6 +56,7 @@ export const config = {
     '/admin/:path*',
     '/orientador/:path*',
     '/aluno/:path*',
+    '/manual/:path*',
     // APIs que precisam de proteção global (exclui auth e hooks externos)
     '/api/orientador/:path*',
     '/api/projetos/:path*',

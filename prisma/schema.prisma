@@ -384,6 +384,7 @@ model SistemaLog {
   usuario    Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
   metadata   Json?    // dados adicionais: { email, projetoId, acao, etc }
   ip         String?
+  resolvido  Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   @@index([tipo])

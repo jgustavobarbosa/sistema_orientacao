@@ -15,7 +15,8 @@ import {
   GraduationCap,
   BookOpen,
   Shield,
-  ClipboardList
+  ClipboardList,
+  Info
 } from 'lucide-react';
 import { PapelUsuario } from '@prisma/client';
 
@@ -36,6 +37,7 @@ export function AppSidebar({ session }: { session: Session }) {
         { name: 'Usuários', href: '/admin/usuarios', icon: Users },
         { name: 'Projetos', href: '/admin/projetos', icon: ClipboardList },
         { name: 'Logs do Sistema', href: '/admin/logs', icon: FileText },
+        { name: 'Manual do Professor', href: '/manual/professor', icon: Info },
       ]
     : papel === PapelUsuario.ORIENTADOR 
     ? [
@@ -44,6 +46,7 @@ export function AppSidebar({ session }: { session: Session }) {
         { name: 'Agenda', href: '/orientador/agenda', icon: Calendar },
         { name: 'Configurações', href: '/orientador/configuracoes', icon: Cog },
         { name: 'Histórico de Atas', href: '/orientador/reunioes', icon: FileText },
+        { name: 'Manual do Professor', href: '/manual/professor', icon: Info },
       ]
     : [
         { name: 'Meu Espaço', href: '/aluno', icon: LayoutDashboard },
@@ -51,6 +54,7 @@ export function AppSidebar({ session }: { session: Session }) {
         { name: 'Redação de Capítulos', href: '/aluno/redacao', icon: BookOpen },
         { name: 'Minha Biblioteca', href: '/aluno/biblioteca', icon: BookOpen },
         { name: 'Meus Documentos', href: '/aluno/documentos', icon: FileText },
+        { name: 'Manual do Aluno', href: '/manual/aluno', icon: Info },
       ];
 
   return (

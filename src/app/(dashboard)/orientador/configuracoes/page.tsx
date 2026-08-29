@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { PapelUsuario } from '@prisma/client';
 import { salvarGoogleDriveEmail, salvarMeetFixo, salvarConfigAgenda, alternarAgenda } from './actions';
-import { Settings, FolderOpen, Video, Calendar, Bell, ExternalLink, Link as LinkIcon } from 'lucide-react';
+import { Settings, FolderOpen, Video, Calendar, Bell, ExternalLink, Link as LinkIcon, BookOpen } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function ConfiguracoesPage() {
   const session = await getServerSession(authOptions);
@@ -219,6 +220,31 @@ export default async function ConfiguracoesPage() {
         <p className="text-xs text-slate-500 mt-2">
           A configuração de e-mail é feita nas variáveis de ambiente (SMTP / Resend).
         </p>
+      </div>
+
+      {/* Card: Manual do SOIA */}
+      <div className="glass border border-slate-900/60 rounded-2xl p-6 space-y-3">
+        <h2 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-indigo-400" />
+          Manual do SOIA
+        </h2>
+        <p className="text-sm text-slate-400">
+          Consulte o manual completo para entender todas as funcionalidades da plataforma.
+        </p>
+        <div className="flex gap-3 pt-1">
+          <Link
+            href="/manual/professor"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 font-semibold text-sm rounded-xl transition-all"
+          >
+            Manual do Professor
+          </Link>
+          <Link
+            href="/manual/aluno"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-xl transition-all"
+          >
+            Manual do Aluno
+          </Link>
+        </div>
       </div>
 
       {/* Card: Informações da Conta */}

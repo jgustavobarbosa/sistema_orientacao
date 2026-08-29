@@ -149,15 +149,55 @@ export async function impersonateUser(targetUserId: string) {
   const target = await prisma.usuario.findUnique({ where: { id: targetUserId } });
   if (!target) return redirect('/admin/usuarios?error=UsuarioNaoEncontrado');
 
-  // serverLog ANTES do redirect — fire-and-forget, nao pode falhar
+  // serverLog ANTES — fire-and-forget
   serverLog('ADMIN_ACTION', 'AVISO',
     `Admin impersonou ${target.email} (${target.nome})`,
     { targetUserId, targetEmail: target.email }, session.user.id).catch(() => {});
 
-  // Redirect para fazer logout e login como o usuario alvo
-  // NOTA: redirect() lanca NEXT_REDIRECT — nao colocar dentro de try/catch
+  // Gera um JWT para o usuario alvo e seta o cookie de sessao
+  // Usa encode() do next-auth/jwt para criar o token exato que o NextAuth espera
+  const { encode } = await import('next-auth/jwt');
+  const { cookies } = await import('next/headers');
+  const crypto = await import('crypto');
+
+  const secret = process.env.NEXTAUTH_SECRET!;
+  const agora = Math.floor(Date.now() / 1000);
+  const token = {
+    name: target.nome,
+    email: target.email,
+    sub: target.id,
+    id: target.id,
+    papel: target.papel,
+    ativo: target.ativo,
+    emailConfirmado: target.emailConfirmado,
+    iat: agora,
+    exp: agora + 30 * 24 * 60 * 60, // 30 dias
+    jti: crypto.randomBytes(16).toString('hex'),
+  };
+
+  const sessionToken = await encode({ token, secret });
+
+  // Seta o cookie de sessao do NextAuth
+  // HTTPS usa __Secure- prefix
+  (await cookies()).set('__Secure-next-auth.session-token', sessionToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60,
+  });
+  // Fallback para HTTP
+  (await cookies()).set('next-auth.session-token', sessionToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60,
+  });
+
+  // Redirect para o dashboard do usuario alvo
   const redirectMap: Record<string, string> = {
     ADMIN: '/admin', ORIENTADOR: '/orientador', ORIENTANDO: '/aluno',
   };
-  redirect(`/api/auth/signin?callbackUrl=${redirectMap[target.papel] || '/'}`);
+  redirect(redirectMap[target.papel] || '/');
 }
