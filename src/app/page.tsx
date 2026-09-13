@@ -10,9 +10,12 @@ export default async function Home() {
     redirect('/login');
   }
 
-  if (session.user.papel === PapelUsuario.ORIENTADOR) {
+  if (
+    session.user.papel === PapelUsuario.ORIENTADOR ||
+    session.user.papel === PapelUsuario.ADMIN
+  ) {
     redirect('/orientador');
-  } else {
-    redirect('/aluno');
   }
+
+  redirect('/aluno');
 }

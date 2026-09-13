@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:local": "node --env-file=.env scripts/seed-local.mjs",
+    "db:push": "prisma db push",
+    "db:ready": "prisma db push && prisma generate && npm run seed:local"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

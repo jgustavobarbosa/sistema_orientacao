@@ -1,87 +1,104 @@
 # SOIA — Sistema de Orientação Acadêmica Inteligente
 
-O **SOAI** é uma plataforma acadêmica colaborativa desenvolvida para orientadores gerenciarem seus orientandos (Iniciação Científica, TCC, Mestrado, Doutorado e Pós-Doc) de forma unificada, com auxílio de Inteligência Artificial para triagem, comparação de redações, auditoria de escrita por IA e acompanhamento em trilhas metodológicas baseadas em catálogo de modelos acadêmicos.
+Plataforma para o orientador acompanhar orientandos (IC, TCC, mestrado, doutorado e pós-doc) num só lugar: projeto, prazos, redação, atas, documentos e apoio de IA.
+
+O nome no código ainda aparece como SOAI em alguns pontos; o produto em uso é **SOIA**.
 
 ---
 
-## 🚀 Principais Funcionalidades
+## O que o sistema faz
 
-### 1. Autenticação Própria e Gestão de Usuários
-- **Fluxo Email/Senha**: Cadastro local e login protegidos com senhas seguras codificadas por criptografia (bcrypt).
-- **Ativação e Confirmação**: Envio de links de ativação por SMTP Gmail real e fluxo de aprovação de novos cadastros de estudantes.
-- **Bypass de Administrador**: Orientadores principais possuem bypass automático na aprovação de cadastro de usuário.
-- **Redefinição de Senha**: Fluxo de recuperação contendo tokens temporários e envio automatizado.
+### Autenticação e usuários
+- Login por e-mail e senha (bcrypt)
+- Confirmação de e-mail e ativação pelo orientador/admin
+- Recuperação de senha por link temporário
 
-### 2. Onboarding Científico & Ficha Técnica (`E0_ACOLHIMENTO`)
-- **Ficha Inicial com 18 Campos**: Estruturação técnica do projeto abordando tema, delimitação, hipóteses, objetivos, limites práticos e ética.
-- **Extração com Inteligência Artificial**: O estudante digita um diagnóstico livre e a IA (Gemini via OpenRouter) preenche automaticamente a ficha técnica para aprovação e validação rápida.
-- **Snapshoting do Modelo**: No onboarding, o sistema clona a trilha metodológica de etapas e seções do catálogo para o escopo do aluno de forma imutável.
+### Onboarding e ficha do projeto
+- Ficha inicial com os campos técnicos do plano (tema, problema, objetivos, ética etc.)
+- Preenchimento assistido por IA a partir de um texto livre do aluno
+- Ao concluir o onboarding, a trilha do modelo acadêmico é copiada para o projeto
 
-### 3. Trilha Metodológica & Catálogo de Modelos Acadêmicos
-- **Catálogo de Produtos**: O sistema oferece templates padrão para 4 modalidades:
-  - *Projeto de Pesquisa Científica* (`PROJ_PESQ`)
-  - *Monografia Acadêmica Tradicional* (`MONO`)
-  - *Artigo Científico Empírico* (`ART_EMP`)
-  - *Produto Técnico ou Tecnológico* (`PROD_TEC`)
-- **Gates Científicos de Etapa**: O professor decide e registra a aprovação formal do avanço de etapa, bloqueado caso haja seções obrigatórias incompletas.
+### Trilha metodológica
+Modelos disponíveis: projeto de pesquisa, monografia, artigo empírico e produto técnico.  
+Cada etapa tem gate: o professor só libera a próxima quando as seções obrigatórias estão em ordem.
 
-### 4. Controle de Redação Científica & Versionamento
-- **Protocolo de Submissão em 4 Blocos**: Cada envio de capítulo exige obrigatoriamente justificar o que foi produzido, o que mudou, gargalos e próximos passos.
-- **Ajustes Corretivos Granulares**: O professor pode criar checklists acionáveis vinculados ao capítulo, exibidos como pendências interativas para o estudante marcar como resolvido.
-- **Dossiê Acadêmico Consolidado**: Manifesto estruturado contendo as versões aprovadas e trava ativa contra lacunas obrigatórias para a defesa.
+### Redação e revisão
+- Submissão de capítulo com o protocolo em 4 blocos (o que produzi / o que mudou / dúvidas / próximos passos)
+- Ajustes corretivos pontuais feitos pelo orientador
+- Dossiê com trechos aprovados; seções obrigatórias em aberto bloqueiam a defesa
 
-### 5. Agenda Inteligente & Automação de Rotinas
-- **Slots Semanais**: Definição de janelas livres na agenda do professor orientador.
-- **Google Meet Fixo**: Encontros marcados de forma integrada com link fixo (`https://meet.google.com/fxv-mbbh-rqj`).
-- **Automação de Encontros**: Agendamentos quinzenais ou mensais programados em lote.
-- **Atas Canônicas**: Geração de atas estruturadas contendo sínteses, riscos, mitigação e planos de ação.
+### Documentos
+- Upload de manuscritos e anexos pelo aluno, com vínculo a uma seção/capítulo
+- O orientador vê, baixa e recebe notificação do envio
+- Parecer de IA do documento fica com o professor até liberação explícita
 
-### 6. Assistência de Inteligência Artificial & Auditoria de Autoria
-- **IA Comparadora de Versões**: Laudo de comparação entre versões novas e anteriores com checagem de atendimento das correções do orientador.
-- **Auditoria de Escrita por IA**: Avaliação estatística de similaridade textual com geradores artificiais (retorna score de 0 a 100).
-- **Notificações em Tempo Real**: Alertas dinâmicos no sino do cabeçalho e e-mails transacionais automáticos.
+### Agenda e atas
+- Janelas de disponibilidade do orientador
+- Agendamento com Meet (link configurável)
+- Atas estruturadas (síntese, decisões, riscos, plano de trabalho)
 
----
-
-## 🔒 Hardening & Segurança (Isolamento de Dados)
-O sistema aplica a regra de ownership estrito na camada de banco de dados e rotas. Um orientando **nunca** possui permissão de leitura sobre atas, reuniões, documentos, notas ou laudos de IA pertencentes a outros projetos de orientação do professor. Qualquer tentativa ilegal é interceptada e gravada em logs de auditoria.
+### IA
+- Comparação entre versões de texto
+- Score de autoria (humano vs. IA)
+- Notificações no portal (e e-mail, quando SMTP estiver configurado)
 
 ---
 
-## 🛠️ Stack Tecnológica
-- **Framework**: Next.js 16 (App Router com Turbopack)
-- **Banco de Dados**: PostgreSQL (Prisma ORM)
-- **Estilização**: CSS Vanilla (Aesthetics Premium Glassmorphism)
-- **Provedor LLM**: OpenRouter (Gemini 2.5 Flash)
-- **E-mails Transacionais**: Nodemailer com SMTP Gmail Real
+## Isolamento de dados
+
+Cada aluno só acessa o próprio projeto. Tentativas de acesso cruzado são bloqueadas e registradas em auditoria.
 
 ---
 
-## 🚀 Como Executar Localmente
+## Stack
 
-1. **Instalar Dependências**:
-   ```bash
-   npm install
-   ```
-2. **Configurar Variáveis de Ambiente (`.env`)**:
-   Crie um arquivo `.env` na raiz do projeto com:
-   ```env
-   DATABASE_URL="sua-string-conexao-postgres"
-   OPENROUTER_API_KEY="sua-chave-openrouter"
-   NEXTAUTH_SECRET="seu-segredo-de-sessao"
-   NEXTAUTH_URL="http://localhost:3000"
-   SMTP_HOST="smtp.gmail.com"
-   SMTP_PORT="587"
-   SMTP_USER="janioguga@gmail.com"
-   SMTP_PASS="sua-senha-de-aplicativo"
-   ORIENTADOR_EMAIL="janioguga@gmail.com"
-   ```
-3. **Sincronizar Banco**:
-   ```bash
-   npx prisma db push
-   npx prisma generate
-   ```
-4. **Executar Servidor de Desenvolvimento**:
-   ```bash
-   npm run dev
-   ```
+- Next.js 16 (App Router)
+- PostgreSQL + Prisma
+- CSS próprio (tema escuro / glass)
+- OpenRouter (Gemini) para LLM
+- Nodemailer / Resend para e-mail
+
+---
+
+## Ambiente local
+
+```bash
+npm install
+```
+
+Variáveis mínimas no `.env` (exemplo):
+
+```env
+DATABASE_URL="postgresql://soai_user:SENHA@localhost:5432/soai_prod?schema=public"
+NEXTAUTH_SECRET="um-segredo-longo"
+NEXTAUTH_URL="http://localhost:3000"
+ORIENTADOR_EMAIL="janioguga@gmail.com"
+```
+
+Para desenvolvimento local, `NEXTAUTH_URL` precisa ser `http://localhost:3000`. Em produção use o domínio real (ex.: `https://soiaia.duckdns.org`).
+
+```bash
+npm run db:ready   # prisma db push + generate + seed de teste
+npm run dev
+```
+
+Credenciais do seed local e o fluxo de teste estão em [docs/TESTE_LOCAL.md](docs/TESTE_LOCAL.md).
+
+| Papel | E-mail | Senha |
+|---|---|---|
+| Admin / Professor | `janioguga@gmail.com` | `senha123` |
+| Aluno (teste) | `matheus@soia.local` | `senha123` |
+
+Só o seed: `npm run seed:local` (idempotente; **não** rode em produção).
+
+---
+
+## Produção e rollback
+
+Procedimento de deploy, checklist de integridade e ponto de rollback: [docs/DEPLOY_PRODUCAO.md](docs/DEPLOY_PRODUCAO.md).
+
+Resumo:
+1. Tag de rollback no `main` atual antes do push
+2. Push para `origin/main`
+3. Na VPS: `git pull`, `prisma db push` (colunas novas, sem apagar dados), `build`, reinício PM2
+4. Conferir login de professor e lista de documentos do aluno

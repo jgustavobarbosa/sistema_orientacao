@@ -30,12 +30,12 @@ export default withAuth(
       return NextResponse.redirect(new URL('/aluno?error=AcessoNegado', req.url));
     }
 
-    if (path.startsWith('/aluno') && papel === PapelUsuario.ORIENTADOR) {
-      // O orientador pode opcionalmente visualizar a área de aluno se quiser, 
-      // mas por padrão redireciona para seu painel centralizado se ele apenas bater em /aluno
-      if (path === '/aluno') {
-        return NextResponse.redirect(new URL('/orientador', req.url));
-      }
+    // Professor/Admin nunca devem cair no portal de proposta do aluno
+    if (
+      path.startsWith('/aluno') &&
+      (papel === PapelUsuario.ORIENTADOR || papel === PapelUsuario.ADMIN)
+    ) {
+      return NextResponse.redirect(new URL('/orientador', req.url));
     }
 
     return NextResponse.next();

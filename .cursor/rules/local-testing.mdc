@@ -1,0 +1,27 @@
+---
+description: Credenciais e fluxo permanente de teste local do SOIA (seed, login, NEXTAUTH_URL)
+alwaysApply: true
+---
+
+# Teste local SOIA
+
+Quando o usuário pedir para testar localmente, ou o banco local estiver vazio:
+
+1. Rodar `npm run seed:local` (idempotente).
+2. Garantir `NEXTAUTH_URL="http://localhost:3000"` no `.env` para `npm run dev`.
+3. App em `http://localhost:3000`.
+
+## Credenciais padrão (após seed)
+
+- **Admin/Professor:** `janioguga@gmail.com` / `senha123`
+- **Aluno Matheus:** `matheus@soia.local` / `senha123`
+
+Documentação: `docs/TESTE_LOCAL.md`  
+Deploy produção: `docs/DEPLOY_PRODUCAO.md`  
+Script: `scripts/seed-local.mjs` (`npm run seed:local`)
+
+## Não confundir
+
+- Produção (`soiaia.duckdns.org`) tem dados reais; o Postgres local pode estar vazio.
+- O seed local **não** apaga documentos de produção; só popula o banco apontado por `DATABASE_URL` local.
+- **Nunca** rode `npm run seed:local` na VPS de produção.

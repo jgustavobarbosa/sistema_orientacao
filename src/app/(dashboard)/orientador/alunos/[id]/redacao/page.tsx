@@ -46,6 +46,18 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
       },
       itensRevisao: {
         orderBy: { createdAt: 'asc' }
+      },
+      documentos: {
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          titulo: true,
+          categoria: true,
+          versao: true,
+          storagePath: true,
+          nomeArquivoOriginal: true,
+          createdAt: true,
+        }
       }
     },
     orderBy: { updatedAt: 'desc' }
@@ -108,7 +120,13 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
                       Aguardando Revisão
                     </span>
                   )}
-                  {secao.status === 'PENDENTE' && (!secao.conteudo || secao.conteudo.trim().length === 0) && (
+                  {secao.status === 'PENDENTE' && (!secao.conteudo || secao.conteudo.trim().length === 0) && secao.documentos.length > 0 && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 border border-indigo-500/20 text-indigo-300">
+                      <FileText className="h-4 w-4" />
+                      Documento anexado
+                    </span>
+                  )}
+                  {secao.status === 'PENDENTE' && (!secao.conteudo || secao.conteudo.trim().length === 0) && secao.documentos.length === 0 && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-slate-600/10 border border-slate-600/20 text-slate-400">
                       <FileText className="h-4 w-4" />
                       Aguardando Texto
@@ -189,6 +207,37 @@ export default async function OrientadorRevisarRedacaoPage({ params }: RevisarRe
                       >
                         {secao.linkAnexo}
                       </a>
+                    </div>
+                  )}
+
+                  {secao.documentos.length > 0 && (
+                    <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-100 text-xs rounded-xl space-y-2">
+                      <p className="font-bold flex items-center gap-1.5 text-indigo-300">
+                        <FileText className="h-4 w-4 shrink-0" />
+                        Arquivos vinculados a esta seção ({secao.documentos.length})
+                      </p>
+                      <ul className="space-y-2">
+                        {secao.documentos.map((doc) => (
+                          <li key={doc.id} className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-slate-200">{doc.titulo}</p>
+                              <p className="text-[10px] text-slate-500">
+                                {doc.categoria} · v{doc.versao} · {new Date(doc.createdAt).toLocaleDateString('pt-BR')}
+                              </p>
+                            </div>
+                            {doc.storagePath ? (
+                              <a
+                                href={`/api/documentos/${doc.id}/download`}
+                                className="text-[10px] font-bold text-indigo-300 hover:underline shrink-0"
+                              >
+                                Baixar
+                              </a>
+                            ) : (
+                              <span className="text-[9px] text-amber-400 shrink-0">Sem arquivo</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
 

@@ -249,10 +249,15 @@ model Documento {
   id                   String             @id @default(uuid()) @db.Uuid
   projetoId            String             @db.Uuid
   projeto              ProjetoOrientacao  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  secaoId              String?            @db.Uuid
+  secao                SecaoTexto?        @relation(fields: [secaoId], references: [id], onDelete: SetNull)
   categoria            CategoriaDocumento @default(OUTRO)
   titulo               String
   versao               Int                @default(1)
   driveFileId          String
+  storagePath          String?
+  nomeArquivoOriginal  String?
+  mimeType             String?
   tamanhoBytes         BigInt?
   checksum             String?
   comentariosOrientador String?            @db.Text
@@ -263,6 +268,7 @@ model Documento {
   parecerLLM           ParecerLLM?
 
   @@index([projetoId])
+  @@index([secaoId])
 }
 
 model ParecerLLM {
@@ -346,6 +352,7 @@ model SecaoTexto {
   historicoVersoes   VersaoSecaoTexto[]
   auditoriasIA       AuditoriaIA[]
   itensRevisao       ItemRevisao[]
+  documentos         Documento[]
 
   @@index([projetoId])
   @@index([etapaProjetoId])

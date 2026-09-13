@@ -32,7 +32,8 @@ import {
   agendarReuniao, 
   reagendarReuniao, 
   agendarReuniaoLivre,
-  decidirStageGate
+  decidirStageGate,
+  vincularDocumentoSecao
 } from '@/app/actions';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { FormDecisaoGate } from '@/components/form-decisao-gate';
@@ -69,7 +70,10 @@ export default async function DetalhesAlunoPage({ params }: AlunoPageProps) {
         orderBy: { dataHoraInicio: 'desc' },
       },
       documentos: {
-        include: { parecerLLM: true },
+        include: {
+          parecerLLM: true,
+          secao: { select: { id: true, titulo: true } },
+        },
         orderBy: { createdAt: 'desc' },
       },
       secoesTexto: {
@@ -300,8 +304,11 @@ export default async function DetalhesAlunoPage({ params }: AlunoPageProps) {
                             {secao.status === 'REVISAR' && (
                               <span className="text-[10px] text-red-400 font-bold">Revisar</span>
                             )}
-                            {secao.status === 'PENDENTE' && (
+                            {secao.status === 'PENDENTE' && secao.conteudo?.trim() && (
                               <span className="text-[10px] text-amber-400 font-bold animate-pulse">Revisão Pendente</span>
+                            )}
+                            {secao.status === 'PENDENTE' && !secao.conteudo?.trim() && (
+                              <span className="text-[10px] text-slate-500 font-bold">Ausente/Pendente</span>
                             )}
 
                             <Link 
@@ -373,6 +380,179 @@ export default async function DetalhesAlunoPage({ params }: AlunoPageProps) {
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Normas de Defesa</span>
                 <p className="text-slate-350 mt-0.5 truncate">{projeto.normasEntrega || 'Regulamento ABNT geral'}</p>
               </div>
+            </div>
+
+            {/* Documentos do Aluno */}
+            <div className="glass p-5 rounded-2xl border border-slate-900/60 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-bold text-slate-200 text-sm flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-indigo-400" />
+                  Documentos Enviados
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-900 border border-slate-800 text-slate-400 rounded-full">
+                  {projeto.documentos.length}
+                </span>
+              </div>
+
+              {projeto.documentos.length === 0 ? (
+                <p className="text-xs text-slate-500 text-center py-4">
+                  Nenhum arquivo enviado pelo aluno ainda.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {projeto.documentos.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="p-3 bg-slate-950/40 border border-slate-900 rounded-xl space-y-2"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-bold text-slate-200">{doc.titulo}</p>
+                          <p className="text-[10px] text-slate-500">
+                            {doc.categoria} · v{doc.versao} · {new Date(doc.createdAt).toLocaleDateString('pt-BR')}
+                          </p>
+                          <p className="text-[10px] text-indigo-300 mt-0.5">
+                            {doc.secao?.titulo || 'Sem seção vinculada'}
+                          </p>
+                        </div>
+                        {doc.storagePath ? (
+                          <a
+                            href={`/api/documentos/${doc.id}/download`}
+                            className="text-[10px] font-bold text-indigo-400 hover:underline shrink-0"
+                          >
+                            Baixar
+                          </a>
+                        ) : (
+                          <span className="text-[9px] text-amber-400 shrink-0" title="Upload antigo sem binário persistido">
+                            Sem arquivo
+                          </span>
+                        )}
+                      </div>
+
+                      {!doc.secaoId && projeto.secoesTexto.length > 0 && (
+                        <form
+                          action={vincularDocumentoSecao.bind(null, doc.id, alunoId)}
+                          className="flex items-center gap-2"
+                        >
+                          <select
+                            name="secaoId"
+                            required
+                            className="flex-1 px-2 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-[10px] text-slate-200 outline-none"
+                          >
+                            <option value="">Vincular à seção...</option>
+                            {projeto.secoesTexto.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.titulo}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="submit"
+                            className="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold rounded-lg cursor-pointer"
+                          >
+                            Vincular
+                          </button>
+                        </form>
+                      )}
+
+                      {doc.parecerLLM && (
+                        <Link
+                          href={`/orientador/reunioes/${doc.id}/parecer`}
+                          className="inline-block text-[10px] font-bold text-emerald-400 hover:underline"
+                        >
+                          Ver parecer IA
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Timeline de Marcos do Aluno */}
+            <div className="glass p-5 rounded-2xl border border-slate-900/60 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-bold text-slate-200 text-sm flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-blue-400" />
+                  Timeline de Marcos do Aluno
+                </h3>
+                <span className="text-[10px] text-slate-500">
+                  {projeto.marcos.filter((m) => m.status === StatusMarco.CONCLUIDO).length}/{projeto.marcos.length} concluídos
+                </span>
+              </div>
+
+              {projeto.marcos.length === 0 ? (
+                <p className="text-xs text-slate-500 text-center py-4">
+                  Nenhum marco cadastrado para este projeto.
+                </p>
+              ) : (
+                <div className="relative border-l border-slate-800 ml-2 space-y-4">
+                  {projeto.marcos.map((marco) => {
+                    const dataPrevista = new Date(marco.dataPrevista);
+                    const isConcluido = marco.status === StatusMarco.CONCLUIDO;
+                    const isAtrasado = !isConcluido && dataPrevista < hoje;
+                    return (
+                      <div key={marco.id} className="relative pl-5">
+                        <span
+                          className={`absolute left-0 top-1.5 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-slate-950 ${
+                            isConcluido ? 'bg-emerald-500' : isAtrasado ? 'bg-amber-500' : 'bg-slate-600'
+                          }`}
+                        />
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className={`text-xs font-bold ${isConcluido ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
+                              {marco.titulo}
+                            </p>
+                            <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                              <Calendar className="h-3 w-3" />
+                              Prazo: {dataPrevista.toLocaleDateString('pt-BR')}
+                              {isAtrasado && <span className="text-amber-400 font-semibold ml-1">Atrasado</span>}
+                            </p>
+                          </div>
+                          <form action={alternarMarcoStatus.bind(null, marco.id, alunoId, marco.status)}>
+                            <button
+                              type="submit"
+                              className={`px-2 py-1 text-[10px] font-bold rounded-lg border cursor-pointer ${
+                                isConcluido
+                                  ? 'bg-slate-900 text-slate-500 border-slate-800'
+                                  : 'bg-blue-600/10 text-blue-300 border-blue-500/20'
+                              }`}
+                            >
+                              {isConcluido ? 'Reabrir' : 'Concluir'}
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <form action={criarMarcoPersonalizado} className="pt-3 border-t border-slate-900/60 space-y-2">
+                <input type="hidden" name="projetoId" value={projeto.id} />
+                <input type="hidden" name="orientandoId" value={alunoId} />
+                <input type="hidden" name="tipo" value="OUTRO" />
+                <p className="text-[10px] font-bold text-slate-500 uppercase">Novo marco personalizado</p>
+                <input
+                  type="text"
+                  name="titulo"
+                  required
+                  placeholder="Ex: Entrega cap. 2"
+                  className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 rounded-xl text-xs text-slate-100 outline-none"
+                />
+                <input
+                  type="date"
+                  name="dataPrevista"
+                  required
+                  className="w-full px-3 py-2 bg-slate-950/40 border border-slate-900 rounded-xl text-xs text-slate-100 outline-none"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold rounded-xl cursor-pointer"
+                >
+                  Adicionar Marco
+                </button>
+              </form>
             </div>
 
             {/* Agendamentos Rápidos de Reunião */}

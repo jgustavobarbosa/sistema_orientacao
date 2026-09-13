@@ -342,6 +342,7 @@ export async function enviarDocumento(formData: FormData) {
   const alunoId = formData.get('alunoId') as string;
   const titulo = formData.get('titulo') as string;
   const categoriaRaw = formData.get('categoria') as string;
+  const secaoIdRaw = formData.get('secaoId') as string;
   const arquivo = formData.get('arquivo') as File;
 
   if (!projetoId || !titulo || !categoriaRaw || !arquivo) return;
@@ -349,44 +350,153 @@ export async function enviarDocumento(formData: FormData) {
   try {
     const { prisma } = await import('@/lib/db');
     const { gerarParecerLLM } = await import('@/lib/gemini');
+    const { criarNotificacao } = await import('@/lib/notifications');
+    const path = await import('path');
+    const fs = await import('fs/promises');
+    const crypto = await import('crypto');
+
+    const projeto = await prisma.projetoOrientacao.findUnique({
+      where: { id: projetoId },
+      include: { orientando: true, orientador: true },
+    });
+
+    if (!projeto || projeto.orientandoId !== alunoId) {
+      throw new Error('Projeto inválido para upload de documento.');
+    }
+
+    const secaoId = secaoIdRaw && secaoIdRaw.trim().length > 0 ? secaoIdRaw.trim() : null;
+    if (secaoId) {
+      const secao = await prisma.secaoTexto.findFirst({
+        where: { id: secaoId, projetoId },
+      });
+      if (!secao) {
+        throw new Error('Seção inválida para vínculo do documento.');
+      }
+    }
 
     const categoria = categoriaRaw as any;
-    const driveFileId = `drive-${Date.now()}-${arquivo.name}`;
+    const safeName = arquivo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const docId = crypto.randomUUID();
+    const relativePath = path.join(projetoId, `${docId}-${safeName}`);
+    const uploadsRoot = path.join(process.cwd(), 'uploads', 'documentos');
+    const absolutePath = path.join(uploadsRoot, relativePath);
+
+    await fs.mkdir(path.dirname(absolutePath), { recursive: true });
+    const buffer = Buffer.from(await arquivo.arrayBuffer());
+    await fs.writeFile(absolutePath, buffer);
+
     const tamanhoBytes = BigInt(arquivo.size);
+    const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
 
     const doc = await prisma.documento.create({
       data: {
+        id: docId,
         projetoId,
+        secaoId,
         categoria,
         titulo,
-        driveFileId,
+        driveFileId: `local:${relativePath}`,
+        storagePath: relativePath,
+        nomeArquivoOriginal: arquivo.name,
+        mimeType: arquivo.type || null,
         tamanhoBytes,
+        checksum,
         enviadoPorId: alunoId,
-        versao: 1
-      }
+        versao: 1,
+      },
     });
 
-    let textoDocumento = `Conteúdo simulado do arquivo acadêmico "${arquivo.name}".\n`;
+    let textoDocumento = `Arquivo acadêmico "${arquivo.name}".\n`;
     textoDocumento += `Título do Trabalho: ${titulo}\n`;
-    textoDocumento += `Este arquivo é classificado sob a categoria de ${categoria}.\n`;
+    textoDocumento += `Categoria: ${categoria}.\n`;
+    if (secaoId) {
+      const secao = await prisma.secaoTexto.findUnique({ where: { id: secaoId } });
+      if (secao) textoDocumento += `Vinculado à seção: ${secao.titulo}.\n`;
+    }
 
-    const parecer = await gerarParecerLLM(titulo, categoria, textoDocumento);
+    try {
+      const parecer = await gerarParecerLLM(titulo, categoria, textoDocumento);
+      await prisma.parecerLLM.create({
+        data: {
+          documentoId: doc.id,
+          resumo: parecer.resumo,
+          pontosFortes: parecer.pontosFortes,
+          lacunas: parecer.lacunas,
+          orientacoesProximasEtapas: parecer.orientacoesProximasEtapas,
+          modeloUsado: 'gemini-1.5-flash',
+        },
+      });
+    } catch (parecerErr) {
+      console.error('Parecer LLM indisponível no upload; documento preservado:', parecerErr);
+    }
 
-    await prisma.parecerLLM.create({
-      data: {
-        documentoId: doc.id,
-        resumo: parecer.resumo,
-        pontosFortes: parecer.pontosFortes,
-        lacunas: parecer.lacunas,
-        orientacoesProximasEtapas: parecer.orientacoesProximasEtapas,
-        modeloUsado: 'gemini-1.5-flash'
-      }
-    });
+    const secaoLabel = secaoId
+      ? (await prisma.secaoTexto.findUnique({ where: { id: secaoId } }))?.titulo
+      : null;
+
+    await criarNotificacao(
+      projeto.orientadorId,
+      'Novo documento enviado',
+      `O aluno ${projeto.orientando.nome} enviou "${titulo}"${secaoLabel ? ` (seção: ${secaoLabel})` : ''}.`
+    );
 
     revalidatePath('/aluno/documentos');
     revalidatePath(`/orientador/alunos/${alunoId}`);
+    revalidatePath(`/orientador/alunos/${alunoId}/redacao`);
   } catch (error) {
     console.error('Erro ao enviar documento:', error);
+  }
+}
+
+export async function vincularDocumentoSecao(documentoId: string, orientandoId: string, formData: FormData) {
+  const secaoId = formData.get('secaoId') as string;
+  if (!documentoId || !secaoId) return;
+
+  try {
+    const { prisma } = await import('@/lib/db');
+    const { getServerSession } = await import('next-auth/next');
+    const { authOptions } = await import('@/lib/auth');
+    const { PapelUsuario } = await import('@prisma/client');
+
+    const session = await getServerSession(authOptions);
+    if (
+      !session ||
+      (session.user.papel !== PapelUsuario.ORIENTADOR && session.user.papel !== PapelUsuario.ADMIN)
+    ) {
+      return;
+    }
+
+    const documento = await prisma.documento.findUnique({
+      where: { id: documentoId },
+      include: { projeto: true },
+    });
+
+    if (!documento || documento.projeto.orientandoId !== orientandoId) {
+      return;
+    }
+
+    if (
+      session.user.papel !== PapelUsuario.ADMIN &&
+      documento.projeto.orientadorId !== session.user.id
+    ) {
+      return;
+    }
+
+    const secao = await prisma.secaoTexto.findFirst({
+      where: { id: secaoId, projetoId: documento.projetoId },
+    });
+    if (!secao) return;
+
+    await prisma.documento.update({
+      where: { id: documentoId },
+      data: { secaoId },
+    });
+
+    revalidatePath(`/orientador/alunos/${orientandoId}`);
+    revalidatePath(`/orientador/alunos/${orientandoId}/redacao`);
+    revalidatePath('/aluno/documentos');
+  } catch (error) {
+    console.error('Erro ao vincular documento à seção:', error);
   }
 }
 
