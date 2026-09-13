@@ -1,10 +1,10 @@
-# SOAI — Sistema de Orientação Acadêmica Inteligente
+# SOIA — Sistema de Orientação Acadêmica Inteligente
 
-O **SOAI** é uma plataforma acadêmica colaborativa desenvolvida pessoalmente para orientadores gerenciarem seus orientandos (Iniciação Científica, TCC, Mestrado, Doutorado e Pós-Doc) de forma unificada, com auxílio de Inteligência Artificial para triagem, comparação de redações e auditoria de escrita por IA.
+O **SOIA** é uma plataforma acadêmica colaborativa desenvolvida pessoalmente para orientadores gerenciarem seus orientandos (Iniciação Científica, TCC, Mestrado, Doutorado e Pós-Doc) de forma unificada, com auxílio de Inteligência Artificial para triagem, comparação de redações e auditoria de escrita por IA.
 
 ---
 
-## 🚀 Principais Funcionalidades
+## Principais Funcionalidades
 
 ### 1. Painel Administrativo & Gestão de Orientados
 - Controle de cadastro e status de autorização de alunos (Ativo/Suspenso).
@@ -19,7 +19,7 @@ O **SOAI** é uma plataforma acadêmica colaborativa desenvolvida pessoalmente p
 - **Meet Fixo & E-mails**: Geração automática de Meet por aluno e notificações bilaterais automáticas de agendamento/reagendamento.
 - **Prevenção de Choques**: Validação algorítmica rigorosa impedindo reuniões em horários sobrepostos.
 
-### 3. Registro de Atas Padrão SOAI
+### 3. Registro de Atas Padrão SOIA
 Ata estruturada contendo as 7 seções canônicas de documentação científica:
 1. Cabeçalho (Encontro, Cronograma, Pergunta).
 2. Síntese de Avanço (Tabela de entregas).
@@ -52,12 +52,12 @@ Ata estruturada contendo as 7 seções canônicas de documentação científica:
 
 ---
 
-## 🔒 Hardening & Segurança (Isolamento de Dados)
+## Hardening & Segurança (Isolamento de Dados)
 O sistema aplica a regra de ownership estrito na camada de banco de dados e rotas. Um orientando **nunca** possui permissão de leitura sobre atas, reuniões, documentos ou laudos de IA pertencentes a outros projetos de orientação do professor. Qualquer tentativa ilegal é interceptada e gravada em `AuditoriaLog`.
 
 ---
 
-## 🛠️ Stack Tecnológica
+## Stack Tecnológica
 - **Framework**: Next.js 16 (App Router com Turbopack)
 - **Banco de Dados**: PostgreSQL (Prisma ORM)
 - **Estilização**: TailwindCSS
@@ -66,7 +66,7 @@ O sistema aplica a regra de ownership estrito na camada de banco de dados e rota
 
 ---
 
-## 🚀 Como Executar Localmente
+##  Como Executar Localmente
 
 1. **Instalar Dependências**:
    ```bash
